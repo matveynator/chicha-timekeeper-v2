@@ -1,8 +1,8 @@
-package Config
+package config
 
 import (
-	"log"
 	"os"
+	"fmt"
 	"flag"
 	"time"
 )
@@ -40,14 +40,14 @@ func init()  {
 
 	if *flagVersion  {
 		if VERSION != "" {
-			log.Println("Version:", VERSION)
+			fmt.Println("Version:", VERSION)
 		}
 		os.Exit(0)
 	}
 	//startup:
-	log.Println("Welcome to CHICHA, the competition timekeeper (chronograph).")
-	log.Println("github.com/matveynator/chicha")
+	fmt.Println("Welcome to CHICHA, the competition timekeeper (chronograph).")
+	fmt.Println("github.com/matveynator/chicha")
 	if VERSION != "" {
-		log.Println("Version:", VERSION)
+		fmt.Println("Version:", VERSION)
 	}
 }

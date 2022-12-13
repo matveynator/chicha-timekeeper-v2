@@ -25,13 +25,13 @@ do
 		
 		mkdir -p ../binaries/${version}/${target_os_name}/${arch}
 
-		GOOS=${os} GOARCH=${arch} go build -ldflags "-X main.VERSION=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go 2> /dev/null
+		GOOS=${os} GOARCH=${arch} go build -ldflags "-X chicha/packages/config.VERSION=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go 2> /dev/null
 		if [ "$?" != "0" ]
 		#if compilation failed - remove folders - else copy config file.
 		then
 		  rm -rf ../binaries/${version}/${target_os_name}/${arch}
 		else
-		  echo "GOOS=${os} GOARCH=${arch} go build -ldflags "-X main.VERSION=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go"
+		  echo "GOOS=${os} GOARCH=${arch} go build -ldflags "-X chicha/packages/config.VERSION=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go"
 		fi
 	done
 done

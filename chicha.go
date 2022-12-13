@@ -36,7 +36,7 @@ type Lap struct {
 func main() {
   var lap Lap
 
-	db, err := sql.Open("sqlite", Config.DB_FILE_PATH)
+	db, err := sql.Open("sqlite", config.DB_FILE_PATH)
 	if err != nil {
 		log.Fatal(err)
 	}
