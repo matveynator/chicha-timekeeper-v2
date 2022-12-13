@@ -1,6 +1,8 @@
 module chicha
 
-go 1.11
+go 1.19
+
+require modernc.org/sqlite v1.20.0
 
 require (
 	github.com/google/uuid v1.3.0 // indirect
@@ -18,7 +20,6 @@ require (
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.4.0 // indirect
 	modernc.org/opt v0.1.3 // indirect
-	modernc.org/sqlite v1.20.0 // indirect
 	modernc.org/strutil v1.1.3 // indirect
 	modernc.org/token v1.0.1 // indirect
 )

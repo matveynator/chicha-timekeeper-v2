@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"database/sql"
 	_ "modernc.org/sqlite"
+	"chicha/packages/config"
 )
 
-var databaseURI = "chicha.db.sqlite"
 
 type Lap struct {
 	ID                          int64
@@ -36,7 +36,7 @@ type Lap struct {
 func main() {
   var lap Lap
 
-	db, err := sql.Open("sqlite", databaseURI)
+	db, err := sql.Open("sqlite", Config.DB_FILE_PATH)
 	if err != nil {
 		log.Fatal(err)
 	}
