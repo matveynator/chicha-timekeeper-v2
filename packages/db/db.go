@@ -6,7 +6,7 @@ import (
 	"chicha/packages/config"
 	"database/sql"
 	_ "github.com/genjidb/genji/driver"
-	_ "modernc.org/sqlite"
+  _ "modernc.org/sqlite"
 
 )
 
