@@ -5,12 +5,7 @@ import (
 	"log"
 	"chicha/packages/config"
 	"database/sql"
-	_ "github.com/genjidb/genji/driver"
-  _ "modernc.org/sqlite"
-
 )
-
-var lapsChannelDBLocker = make(chan int, 1)
 
 type XMLData  struct {
 	TagID                       string
@@ -57,11 +52,27 @@ var Db *sql.DB
 
 func init() {
 	var err error
-	if Config.DB_TYPE == "genji" || Config.DB_TYPE == "sqlite" {
+	if Config.DB_TYPE == "genji" {
 		Db, err = sql.Open(Config.DB_TYPE, Config.DB_FILE_PATH+"/"+Config.APP_NAME+".db."+Config.DB_TYPE)
 		if err != nil {
-			log.Println("Database file error:", err)
-			panic("Exiting due to configuration error.")
+			Config.DB_TYPE = "sqlite"
+			log.Println("Genji is unsupported on this architecture, switching to sqlite db type.")
+			Db, err = sql.Open(Config.DB_TYPE, Config.DB_FILE_PATH+"/"+Config.APP_NAME+".db."+Config.DB_TYPE)
+			if err != nil {
+				log.Println("Database file error:", err)
+				panic("Exiting due to configuration error.")
+			}
+		}
+	} else if Config.DB_TYPE == "sqlite" {
+		Db, err = sql.Open(Config.DB_TYPE, Config.DB_FILE_PATH+"/"+Config.APP_NAME+".db."+Config.DB_TYPE)
+		if err != nil {
+			Config.DB_TYPE = "genji"
+			log.Println("SQLite is unsupported on this architecture, switching to genji db type.")
+			Db, err = sql.Open(Config.DB_TYPE, Config.DB_FILE_PATH+"/"+Config.APP_NAME+".db."+Config.DB_TYPE)
+			if err != nil {
+				log.Println("Database file error:", err)
+				panic("Exiting due to configuration error.")
+			}
 		}
 	} else {
 		log.Println("Please define valid dbtype (genji / sqlite)")
@@ -70,12 +81,6 @@ func init() {
 }
 
 func CreateDB() {
-	// Create a sql/database DB instance
-	//	db, err := sql.Open("genji", "chicha.genjidb")
-	//	if err != nil {
-	//		log.Println(err)
-	//	}
-	//	defer db.Close()
 	// Create a table. Genji tables are schemaless by default, you don't need to specify a schema.
 	_, err := Db.Exec("CREATE TABLE if not exists Lap(ID INT PRIMARY KEY, SportsmanID INT DEFAULT 0, TagID TEXT, DiscoveryMinimalUnixTime INT DEFAULT 0, DiscoveryAverageUnixTime INT DEFAULT 0, UpdatedAt INT DEFAULT 0, RaceID INT DEFAULT 0, PracticeID INT DEFAULT 0, RacePosition INT DEFAULT 0, TimeBehindTheLeader INT DEFAULT 0, LapNumber INT DEFAULT 0, LapTime INT DEFAULT 0, LapPosition INT DEFAULT 0, LapIsCurrent BOOL DEFAULT FALSE, LapIsStrange BOOL DEFAULT FALSE, RaceFinished BOOL DEFAULT FALSE, BestLapTime INT DEFAULT 0, BestLapNumber INT DEFAULT 0, BestLapPosition INT DEFAULT 0, RaceTotalTime INT DEFAULT 0, BetterOrWorseLapTime INT DEFAULT 0, UNIQUE(ID))")
 	if err != nil {
