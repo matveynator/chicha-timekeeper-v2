@@ -80,8 +80,8 @@ func init() {
     }
   } else if Config.DB_TYPE == "postgres" {
 
-    psqlConnect := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", Config.PG_HOST, Config.PG_PORT, Config.PG_USER, Config.PG_PASS, Config.PG_DB_NAME, Config.PG_SSL)
-    Db, err = sql.Open("pgx", psqlConnect)
+    psqlConnectDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s pool_max_conns=10", Config.PG_HOST, Config.PG_PORT, Config.PG_USER, Config.PG_PASS, Config.PG_DB_NAME, Config.PG_SSL)
+    Db, err = sql.Open("pgx", psqlConnectDSN)
     if err != nil {
       log.Println("Database config error:", err)
       panic("Exiting due to configuration error.")
