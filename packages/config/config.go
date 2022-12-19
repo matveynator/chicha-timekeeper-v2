@@ -8,7 +8,7 @@ import (
 )
 
 var APP_NAME = "chicha"
-var VERSION, _LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS, WEB_LISTENER_ADDRESS, REDIRECT_ADDRESS, DB_TYPE, DB_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE string
+var VERSION, _LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS, WEB_LISTENER_ADDRESS, PROXY_ADDRESS, DB_TYPE, DB_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE string
 var PG_PORT int
 var AVERAGE_RESULTS bool
 var RACE_TIMEOUT_DURATION, MINIMAL_LAP_TIME_DURATION time.Duration
@@ -34,7 +34,7 @@ func init()  {
 	flagVersion := flag.Bool("version", false, "Output version information")
 	flag.StringVar(&COLLECTOR_LISTENER_ADDRESS, "collector", "0.0.0.0:4000", "Provide IP address and port to collect and parse data from RFID and timing readers.")
 	flag.StringVar(&WEB_LISTENER_ADDRESS, "web", "0.0.0.0:80", "Provide IP address and port to listen for HTTP connections from clients.")
-	flag.StringVar(&REDIRECT_ADDRESS, "redirect", "", "Redirect  data stream to another instance. For example: -redirect '10.9.8.7:4000'.")
+	flag.StringVar(&PROXY_ADDRESS, "proxy", "", "Proxy received data to another collector. For example: -proxy '10.9.8.7:4000'.")
 	flag.StringVar(&TIME_ZONE, "timezone", "Europe/London", "Set race timezone.")
 	flag.DurationVar(&RACE_TIMEOUT_DURATION, "timeout", 2*time.Minute, "Set race timeout duration. After this time if nobody passes the finish line the race will be stopped. Valid time units are: 's' (second), 'm' (minute), 'h' (hour).")
 	flag.DurationVar(&MINIMAL_LAP_TIME_DURATION, "laptime", 45*time.Second, "Minimal lap time duration. Results smaller than this duration would be considered wrong." )

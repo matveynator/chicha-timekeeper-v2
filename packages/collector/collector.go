@@ -14,6 +14,7 @@ import (
 
 	"chicha/packages/config"
 	"chicha/packages/data"
+	"chicha/packages/proxy"
 )
 
 func IsValidXML(data []byte) bool {
@@ -119,8 +120,15 @@ func processConnection(connection net.Conn) {
 		}
 		//various data formats processing (text csv, xml) end.
 
+		//set microsecond resolution for logging:
+		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 		//Debug all received data from RFID reader
 		log.Printf("NEW: IP=%s, TAG=%s, TIME=%d, ANT=%d\n", averageResult.IP, averageResult.TagID, averageResult.DiscoveryUnixTime, averageResult.Antenna)
+
+		if Config.PROXY_ADDRESS != "" {
+			go Proxy.ProxyDataToAnotherHost(averageResult.TagID, averageResult.DiscoveryUnixTime, averageResult.Antenna, averageResult.IP)
+		}
+
 
 	}
 }
