@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"chicha/packages/db"
+	"chicha/packages/database"
+	"chicha/packages/collector"
 )
 
 
 func main() {
-  Db.CreateDB()
-	Db.UpdateDB()
-
+  Database.CreateDB()
+	Database.UpdateDB()
+  Collector.StartDataCollector()
 	fmt.Println("Chicha worked!")
 
 
