@@ -13,7 +13,7 @@ import (
 	"encoding/xml"
 
 	"chicha/packages/config"
-	"chicha/packages/database"
+	"chicha/packages/data"
 )
 
 func IsValidXML(data []byte) bool {
@@ -24,8 +24,8 @@ func IsValidXML(data []byte) bool {
 func processConnection(connection net.Conn) {
 	defer connection.Close()
 	var tempDelay time.Duration // how long to sleep on accept failure
-	var rawData Database.RawData
-	var averageResult Database.AverageResult
+	var dataReceived Data.RawData
+	var averageResult Data.AverageResult
 
 	// Read connection in lap
 	for {
@@ -93,7 +93,7 @@ func processConnection(connection net.Conn) {
 			// XML data processing
 			// Prepare date
 			//log.Println("Received data is valid XML")
-			err := xml.Unmarshal(data, &rawData)
+			err := xml.Unmarshal(data, &dataReceived)
 			if err != nil {
 				log.Println("xml.Unmarshal ERROR:", err)
 				continue
@@ -105,17 +105,17 @@ func processConnection(connection net.Conn) {
 				continue
 			}
 			xmlTimeFormat := `2006/01/02 15:04:05.000`
-			discoveryTime, err := time.ParseInLocation(xmlTimeFormat, rawData.DiscoveryTime, loc)
+			discoveryTime, err := time.ParseInLocation(xmlTimeFormat, dataReceived.DiscoveryTime, loc)
 			if err != nil {
 				log.Println("time.ParseInLocation ERROR:", err)
 				continue
 			}
 			averageResult.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
 			// Additional preparing for TagID
-			averageResult.TagID = strings.ReplaceAll(rawData.TagID, " ", "")
+			averageResult.TagID = strings.ReplaceAll(dataReceived.TagID, " ", "")
 
 			// Prepare antenna position
-			averageResult.Antenna = uint8(rawData.Antenna)
+			averageResult.Antenna = uint8(dataReceived.Antenna)
 		}
 		//various data formats processing (text csv, xml) end.
 

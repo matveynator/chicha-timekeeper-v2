@@ -3,51 +3,11 @@ package Database
 import (
 	"fmt"
 	"log"
-	"chicha/packages/config"
 	"database/sql"
+
+	"chicha/packages/config"
+	"chicha/packages/data"
 )
-
-type RawData  struct {
-	TagID                       string
-	DiscoveryTime								string
-	Antenna                     uint8
-	IP                          string
-}
-
-type AverageResult	struct {
-	ID													int64
-	RaceID											uint
-	LapNumber										int
-	TagID												string
-	DiscoveryUnixTime   				int64
-	Antenna             				uint8
-	IP				           				string
-}
-
-type Lap struct {
-	ID                          int64
-	SportsmanID                 string
-	TagID                       string
-	DiscoveryMinimalUnixTime    int64
-	DiscoveryAverageUnixTime    int64
-	UpdatedAt                   int64
-	RaceID                      uint
-	PracticeID                  uint
-	RacePosition                uint
-	TimeBehindTheLeader         int64
-	LapNumber                   int
-	LapTime                     int64
-	LapPosition                 uint
-	LapIsCurrent                bool
-	LapIsStrange                bool
-	RaceFinished                bool
-	BestLapTime                 int64
-	BestLapNumber               int
-	BestLapPosition             uint
-	RaceTotalTime               int64
-	BetterOrWorseLapTime        int64
-}
-
 
 var Db *sql.DB
 
@@ -129,12 +89,12 @@ func UpdateDB() {
 	}
 }
 
-func UpdateLapInDB (lap Lap) (err error) {
+func UpdateLapInDB (lap Data.Lap) (err error) {
 	_, err = Db.Exec("UPDATE Lap SET(SportsmanID = ?, TagID = ?, DiscoveryMinimalUnixTime = ?, DiscoveryAverageUnixTime = ?, UpdatedAt = ?, RaceID = ?, PracticeID = ?, RacePosition = ?, TimeBehindTheLeader = ?, LapNumber = ?, LapTime = ?, LapPosition = ?, LapIsCurrent = ?, LapIsStrange = ?, RaceFinished = ?, BestLapTime = ?, BestLapNumber = ?, BestLapPosition = ?, RaceTotalTime = ?, BetterOrWorseLapTime = ?) WHERE ID = ?", lap.SportsmanID, lap.TagID, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.UpdatedAt, lap.RaceID, lap.PracticeID, lap.RacePosition, lap.TimeBehindTheLeader, lap.LapNumber, lap.LapTime, lap.LapPosition, lap.LapIsCurrent, lap.LapIsStrange, lap.RaceFinished, lap.BestLapTime, lap.BestLapNumber, lap.BestLapPosition, lap.RaceTotalTime, lap.BetterOrWorseLapTime, lap.ID)
 	return
 }
 
-func InsertLapInDB (lap Lap) (id int64, err error) {
+func InsertLapInDB (lap Data.Lap) (id int64, err error) {
 	err = Db.QueryRow("SELECT ID FROM Lap order by ID desc limit 1").Scan(&id)
 	if err == nil {
 		//auto increment ID:
@@ -148,13 +108,13 @@ func InsertLapInDB (lap Lap) (id int64, err error) {
 	return
 }
 
-func SelectLapFromDB(oldLap Lap) (lap Lap, err error) {
+func SelectLapFromDB(oldLap Data.Lap) (lap Data.Lap, err error) {
 	err = Db.QueryRow("SELECT ID,SportsmanID,TagID,DiscoveryMinimalUnixTime,DiscoveryAverageUnixTime,UpdatedAt,RaceID,PracticeID,RacePosition,TimeBehindTheLeader,LapNumber,LapTime,LapPosition,LapIsCurrent,LapIsStrange,RaceFinished,BestLapTime,BestLapNumber,BestLapPosition,RaceTotalTime,BetterOrWorseLapTime FROM Lap WHERE ID = ?", oldLap.ID).Scan(&lap.ID, &lap.SportsmanID, &lap.TagID, &lap.DiscoveryMinimalUnixTime,  &lap.DiscoveryAverageUnixTime, &lap.UpdatedAt,  &lap.RaceID,  &lap.PracticeID,  &lap.RacePosition,  &lap.TimeBehindTheLeader,  &lap.LapNumber,  &lap.LapTime,  &lap.LapPosition,  &lap.LapIsCurrent,  &lap.LapIsStrange,  &lap.RaceFinished,  &lap.BestLapTime,  &lap.BestLapNumber,  &lap.BestLapPosition,  &lap.RaceTotalTime,  &lap.BetterOrWorseLapTime)
 	return
 }
 
 
-func GetCurrentRaceDataFromDB() (laps []Lap, err error) {
+func GetCurrentRaceDataFromDB() (laps []Data.Lap, err error) {
 	var raceID int64
 	err = Db.QueryRow("SELECT RaceID FROM Lap ORDER BY DiscoveryMinimalUnixTime").Scan(&raceID)
 	if err == nil {
@@ -163,7 +123,7 @@ func GetCurrentRaceDataFromDB() (laps []Lap, err error) {
 		if err == nil {
 			// Loop through rows, using Scan to assign column data to struct fields.
 			for rows.Next() {
-				var lap Lap
+				var lap Data.Lap
 				err = rows.Scan(&lap.ID, &lap.SportsmanID, &lap.TagID, &lap.DiscoveryMinimalUnixTime,  &lap.DiscoveryAverageUnixTime, &lap.UpdatedAt,  &lap.RaceID,  &lap.PracticeID,  &lap.RacePosition,  &lap.TimeBehindTheLeader,  &lap.LapNumber,  &lap.LapTime,  &lap.LapPosition,  &lap.LapIsCurrent,  &lap.LapIsStrange,  &lap.RaceFinished,  &lap.BestLapTime,  &lap.BestLapNumber,  &lap.BestLapPosition,  &lap.RaceTotalTime,  &lap.BetterOrWorseLapTime)
 				if err == nil {
 					laps = append(laps, lap)
@@ -176,7 +136,7 @@ func GetCurrentRaceDataFromDB() (laps []Lap, err error) {
 
 
 func SelectFromDB() {
-	var lap Lap
+	var lap Data.Lap
 
 	err := Db.QueryRow("SELECT ID,SportsmanID,TagID,DiscoveryMinimalUnixTime,DiscoveryAverageUnixTime,UpdatedAt,RaceID,PracticeID,RacePosition,TimeBehindTheLeader,LapNumber,LapTime,LapPosition,LapIsCurrent,LapIsStrange,RaceFinished,BestLapTime,BestLapNumber,BestLapPosition,RaceTotalTime,BetterOrWorseLapTime FROM Lap order by ID desc limit 1").Scan(&lap.ID, &lap.SportsmanID, &lap.TagID, &lap.DiscoveryMinimalUnixTime,  &lap.DiscoveryAverageUnixTime, &lap.UpdatedAt,  &lap.RaceID,  &lap.PracticeID,  &lap.RacePosition,  &lap.TimeBehindTheLeader,  &lap.LapNumber,  &lap.LapTime,  &lap.LapPosition,  &lap.LapIsCurrent,  &lap.LapIsStrange,  &lap.RaceFinished,  &lap.BestLapTime,  &lap.BestLapNumber,  &lap.BestLapPosition,  &lap.RaceTotalTime,  &lap.BetterOrWorseLapTime )
 	if err != nil {
