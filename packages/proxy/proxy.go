@@ -4,47 +4,50 @@ import (
 	"log"
 	"fmt"
 	"net"
-	"time"
-	"github.com/eternnoir/gncp"
 
 	"chicha/packages/data"
 	"chicha/packages/config"
 )
 
-var ProxyConnectionPool gncp.ConnPool
-
-// connectionPoolCreator let connection know how to create new connection.
-func connectionPoolCreator() (net.Conn, error) {
-  return net.Dial("tcp", Config.PROXY_ADDRESS)
-}
-
-func restartConnectionPool() {
-   var err error
-	//create connection pool to Config.PROXY_ADDRESS with minimum 3 and max 10 connections.
-	ProxyConnectionPool, err = gncp.NewPool(3, 10, connectionPoolCreator)
-	if err != nil {
-		log.Println("Proxy connection pool restart error:", err)
-		return
-	}
-}
+var proxyWorkersCount = 5
+var proxyTask chan Data.AverageResult
 
 func init() {
+
 	if Config.PROXY_ADDRESS != "" {
+
+		//initialise channel with tasks:
+		proxyTask = make(chan Data.AverageResult)
+
+		for workerId := 1; workerId <= proxyWorkersCount; workerId++ {
+			go proxyWorkerRun(workerId)
+		}
+
 		log.Println("Started tcp proxy restream to:", Config.PROXY_ADDRESS)
-		restartConnectionPool()
 	}
 }
 
-func ProxyDataToAnotherHost(averageResult Data.AverageResult) {
-	//get one connection from pool
+func CreateNewProxyTask(taskData Data.AverageResult) {
+	log.Println("new proxy task:", taskData.TagID)
+	proxyTask <- taskData
+}
 
-	//connection, err := ProxyConnectionPool.Get()
-	connection, err := ProxyConnectionPool.GetWithTimeout(time.Duration(1) * time.Second)
+func proxyWorkerRun(workerId int) {
+	connection, err := net.Dial("tcp", Config.PROXY_ADDRESS)
 	if err != nil {
-		log.Println("Connection pool error:", err)
-		restartConnectionPool()
+		log.Printf("worker %d exited due to net.Dial error: %s", workerId, err)
 		return
 	}
+	//close connection on programm exit
 	defer connection.Close()
-	fmt.Fprintf(connection, "%s, %d, %d, %s\n", averageResult.TagID, averageResult.DiscoveryUnixTime, averageResult.Antenna, averageResult.IP)
+
+	for {
+		select {
+		case currentProxyTask:= <- proxyTask:
+			fmt.Println("proxyWorker", workerId, "processing new job...")
+			fmt.Fprintf(connection, "%s, %d, %d, %s\n", currentProxyTask.TagID, currentProxyTask.DiscoveryUnixTime, currentProxyTask.Antenna, currentProxyTask.IP)
+			fmt.Println("proxyWorker", workerId, "finished job.")
+		}
+	}
 }
+

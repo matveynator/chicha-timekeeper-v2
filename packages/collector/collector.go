@@ -126,7 +126,7 @@ func processConnection(connection net.Conn) {
 		log.Printf("NEW: IP=%s, TAG=%s, TIME=%d, ANT=%d\n", averageResult.IP, averageResult.TagID, averageResult.DiscoveryUnixTime, averageResult.Antenna)
 
 		if Config.PROXY_ADDRESS != "" {
-			go Proxy.ProxyDataToAnotherHost(averageResult)
+			go Proxy.CreateNewProxyTask(averageResult)
 		}
 
 

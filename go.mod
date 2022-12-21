@@ -3,7 +3,6 @@ module chicha
 go 1.19
 
 require (
-	github.com/eternnoir/gncp v0.0.0-20170707042257-c70df2d0cd68
 	github.com/genjidb/genji v0.15.1
 	github.com/jackc/pgx/v5 v5.2.0
 	modernc.org/sqlite v1.20.0

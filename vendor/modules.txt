@@ -70,9 +70,6 @@ github.com/cockroachdb/redact/internal/markers
 github.com/cockroachdb/redact/internal/redact
 github.com/cockroachdb/redact/internal/rfmt
 github.com/cockroachdb/redact/internal/rfmt/fmtsort
-# github.com/eternnoir/gncp v0.0.0-20170707042257-c70df2d0cd68
-## explicit
-github.com/eternnoir/gncp
 # github.com/genjidb/genji v0.15.1
 ## explicit; go 1.18
 github.com/genjidb/genji
