@@ -68,7 +68,9 @@ func processConnection(connection net.Conn) {
 			//received data of type TEXT (parse TEXT).
 			r := csv.NewReader(bytes.NewReader(data))
 			r.Comma = ','
-			r.FieldsPerRecord = 3
+			//r.FieldsPerRecord = 3
+			//make variable number of fields "-1"
+			r.FieldsPerRecord = -1
 			CSV, err := r.Read()
 			if err != nil {
 				log.Println("Recived incorrect CSV data", err)
@@ -123,7 +125,7 @@ func processConnection(connection net.Conn) {
 		//set microsecond resolution for logging:
 		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 		//Debug all received data from RFID reader
-		log.Printf("NEW: IP=%s, TAG=%s, TIME=%d, ANT=%d\n", averageResult.IP, averageResult.TagID, averageResult.DiscoveryUnixTime, averageResult.Antenna)
+		log.Printf("TAG=%s, TIME=%d, IP=%s, ANT=%d\n", averageResult.TagID, averageResult.DiscoveryUnixTime, averageResult.IP, averageResult.Antenna)
 
 		if Config.PROXY_ADDRESS != "" {
 			go Proxy.CreateNewProxyTask(averageResult)
