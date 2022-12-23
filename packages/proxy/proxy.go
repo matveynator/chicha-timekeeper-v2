@@ -10,8 +10,10 @@ import (
 	"chicha/packages/config"
 )
 //оставляем только один процесс который будет брать задачи и передавать их далее на другой сервер (чтобы сохранялась последовательность)
-var proxyWorkersMaxCount = 5
+var proxyWorkersMaxCount int = 1
 var proxyTask chan Data.AverageResult
+var respawnGuardChannel chan int
+var errorLogChannel chan error
 
 func init() {
 
@@ -20,21 +22,15 @@ func init() {
 		//initialise channel with tasks:
 		proxyTask = make(chan Data.AverageResult)
 
-
-
-
-		guardChannel := make(chan int, proxyWorkersMaxCount)
+		//initialize channel to guard respawn tasks
+		respawnGuardChannel = make(chan int, proxyWorkersMaxCount)
 		go func() {
 			for {
-				guardChannel <- 1 // will block if there is proxyWorkersMaxCount ints in guardChannel
-				go func() {
-					go proxyWorkerRun(555)
-					log.Println("Started tcp proxy restream to:", Config.PROXY_ADDRESS)
-					//sleep beafore next worker respawn
-					time.Sleep(5 * time.Second)
-					<-guardChannel // removes an int from guardChannel, allowing another to proceed
-				}()
-
+				// will block if there is proxyWorkersMaxCount ints in respawnGuardChannel
+				respawnGuardChannel <- 1 
+				//sleep 1 second
+				time.Sleep(1 * time.Second)
+				go proxyWorkerRun(len(respawnGuardChannel))
 			}
 		}()
 
@@ -42,29 +38,40 @@ func init() {
 		//	go proxyWorkerRun(workerId)
 		//}
 
-		log.Println("Started tcp proxy restream to:", Config.PROXY_ADDRESS)
 	}
 }
-
-
-
 
 func CreateNewProxyTask(taskData Data.AverageResult) {
 	//log.Println("new proxy task:", taskData.TagID)
 	proxyTask <- taskData
 }
 
-func proxyWorkerRun(workerId int) {
-	//connection, err := net.Dial("tcp", Config.PROXY_ADDRESS)
-	connection, err := net.DialTimeout("tcp", Config.PROXY_ADDRESS, 15 * time.Second)
-	if err != nil {
-		log.Printf("Proxy worker %d exited due to net.Dial error: %s\n", workerId, err)
-		return
+//close connection on programm exit
+func deferCleanup(connection net.Conn) {
+	<-respawnGuardChannel
+	if connection != nil {
+		err := connection.Close() 
+		if err != nil {
+			log.Println("Error closing proxy connection:", err)
+		}
 	}
-	//close connection on programm exit
-	defer connection.Close()
+}
 
+func proxyWorkerRun(workerId int) {
 
+	connection, err := net.DialTimeout("tcp", Config.PROXY_ADDRESS, 15 * time.Second)
+
+	defer deferCleanup(connection)
+
+	if err != nil {
+		log.Printf("Proxy destination %s unreachable. Error: %s\n",  Config.PROXY_ADDRESS, err)
+		return
+
+	} else {
+		log.Printf("Proxy worker #%d connected to destination %s\n", workerId, Config.PROXY_ADDRESS)
+	}
+
+	//initialise connection error channel
 	connectionErrorChannel := make(chan error)
 
 	go func() {
