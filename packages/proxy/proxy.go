@@ -6,14 +6,14 @@ import (
 	"net"
 	"time"
 
+	"chicha/packages/mylog"
 	"chicha/packages/data"
 	"chicha/packages/config"
 )
 //оставляем только один процесс который будет брать задачи и передавать их далее на другой сервер (чтобы сохранялась последовательность)
 var proxyWorkersMaxCount int = 1
 var proxyTask chan Data.AverageResult
-var respawnGuardChannel chan int
-var errorLogChannel chan error
+var respawnLock chan int
 
 func init() {
 
@@ -22,15 +22,16 @@ func init() {
 		//initialise channel with tasks:
 		proxyTask = make(chan Data.AverageResult)
 
-		//initialize channel to guard respawn tasks
-		respawnGuardChannel = make(chan int, proxyWorkersMaxCount)
+		//initialize unblocking channel to guard respawn tasks
+		respawnLock = make(chan int, proxyWorkersMaxCount)
+
 		go func() {
 			for {
-				// will block if there is proxyWorkersMaxCount ints in respawnGuardChannel
-				respawnGuardChannel <- 1 
+				// will block if there is proxyWorkersMaxCount ints in respawnLock
+				respawnLock <- 1 
 				//sleep 1 second
 				time.Sleep(1 * time.Second)
-				go proxyWorkerRun(len(respawnGuardChannel))
+				go proxyWorkerRun(len(respawnLock))
 			}
 		}()
 
@@ -48,7 +49,7 @@ func CreateNewProxyTask(taskData Data.AverageResult) {
 
 //close connection on programm exit
 func deferCleanup(connection net.Conn) {
-	<-respawnGuardChannel
+	<-respawnLock
 	if connection != nil {
 		err := connection.Close() 
 		if err != nil {
@@ -63,12 +64,12 @@ func proxyWorkerRun(workerId int) {
 
 	defer deferCleanup(connection)
 
-	if err != nil {
-		log.Printf("Proxy destination %s unreachable. Error: %s\n",  Config.PROXY_ADDRESS, err)
+	if err != nil  {
+		MyLog.Printonce(fmt.Sprintf("Proxy destination %s unreachable. Error: %s",  Config.PROXY_ADDRESS, err))
 		return
 
 	} else {
-		log.Printf("Proxy worker #%d connected to destination %s\n", workerId, Config.PROXY_ADDRESS)
+		MyLog.Println(fmt.Sprintf("Proxy worker #%d connected to destination %s", workerId, Config.PROXY_ADDRESS))
 	}
 
 	//initialise connection error channel
