@@ -14,6 +14,7 @@ import (
 
 	"chicha/packages/config"
 	"chicha/packages/data"
+	//"chicha/packages/database"
 	"chicha/packages/proxy"
 )
 
@@ -25,8 +26,7 @@ func IsValidXML(data []byte) bool {
 func processConnection(connection net.Conn) {
 	defer connection.Close()
 	var tempDelay time.Duration // how long to sleep on accept failure
-	var dataReceived Data.RawData
-	var averageResult Data.AverageResult
+	var rawData Data.RawData
 
 	// Read connection in lap
 	for {
@@ -59,7 +59,7 @@ func processConnection(connection net.Conn) {
 
 		data := buf[:size]
 
-		averageResult.IP = fmt.Sprintf("%s", connection.RemoteAddr().(*net.TCPAddr).IP)
+		rawData.IP = fmt.Sprintf("%s", connection.RemoteAddr().(*net.TCPAddr).IP)
 
 		//various data formats processing (text csv, xml) start:
 		if !IsValidXML(data) {
@@ -83,20 +83,20 @@ func processConnection(connection net.Conn) {
 				log.Println("Recived incorrect Antenna position CSV value:", err)
 				continue
 			}
-			averageResult.DiscoveryUnixTime, err = strconv.ParseInt(strings.TrimSpace(CSV[1]), 10, 64)
+			rawData.DiscoveryUnixTime, err = strconv.ParseInt(strings.TrimSpace(CSV[1]), 10, 64)
 			if err != nil {
 				log.Println("Recived incorrect discovery unix time CSV value:", err)
 				continue
 			}
-			averageResult.TagID = strings.TrimSpace(CSV[0])
-			averageResult.Antenna = uint8(antennaPosition)
+			rawData.TagID = strings.TrimSpace(CSV[0])
+			rawData.Antenna = uint8(antennaPosition)
 
 			// XML data processing
 		} else {
 			// XML data processing
 			// Prepare date
 			//log.Println("Received data is valid XML")
-			err := xml.Unmarshal(data, &dataReceived)
+			err := xml.Unmarshal(data, &rawData)
 			if err != nil {
 				log.Println("xml.Unmarshal ERROR:", err)
 				continue
@@ -108,30 +108,49 @@ func processConnection(connection net.Conn) {
 				continue
 			}
 			xmlTimeFormat := `2006/01/02 15:04:05.000`
-			discoveryTime, err := time.ParseInLocation(xmlTimeFormat, dataReceived.DiscoveryTime, loc)
+			discoveryTime, err := time.ParseInLocation(xmlTimeFormat, string(rawData.DiscoveryUnixTime), loc)
 			if err != nil {
 				log.Println("time.ParseInLocation ERROR:", err)
 				continue
 			}
-			averageResult.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
+			rawData.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
 			// Additional preparing for TagID
-			averageResult.TagID = strings.ReplaceAll(dataReceived.TagID, " ", "")
+			rawData.TagID = strings.ReplaceAll(rawData.TagID, " ", "")
 
 			// Prepare antenna position
-			averageResult.Antenna = uint8(dataReceived.Antenna)
+			rawData.Antenna = uint8(rawData.Antenna)
 		}
 		//various data formats processing (text csv, xml) end.
 
 		//set microsecond resolution for logging:
 		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 		//Debug all received data from RFID reader
-		log.Printf("TAG=%s, TIME=%d, IP=%s, ANT=%d\n", averageResult.TagID, averageResult.DiscoveryUnixTime, averageResult.IP, averageResult.Antenna)
+		log.Printf("TAG=%s, TIME=%d, IP=%s, ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.IP, rawData.Antenna)
 
 		if Config.PROXY_ADDRESS != "" {
-			go Proxy.CreateNewProxyTask(averageResult)
+			go Proxy.CreateNewProxyTask(rawData)
 		}
 
+/*
+		if len(laps) == 0 {
+			//laps buffer empty - recreate last race from db:
+			log.Println("laps buffer empty - recreate last race from db")
+			laps, err = Database.GetCurrentRaceDataFromDB()
+			if err == nil {
+				log.Printf("laps buffer recreated with %d records from db.\n", len(laps))
+				go Database.addNewLapToLapsBuffer(rawData)
+			} else {
+				log.Println("laps buffer recreation failed with:", err)
+				go Database.addNewLapToLapsBuffer(rawData)
+			}
+		}
 
+		if len(laps) > 0 {
+			// Add current Lap to Laps buffer
+			go Database.addNewLapToLapsBuffer(rawData)
+		}
+
+*/
 	}
 }
 

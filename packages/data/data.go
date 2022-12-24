@@ -2,16 +2,6 @@ package Data
 
 type RawData  struct {
 	TagID                       string
-	DiscoveryTime               string
-	Antenna                     uint8
-	IP                          string
-}
-
-type AverageResult  struct {
-	ID                          int64
-	RaceID                      uint
-	LapNumber                   int
-	TagID                       string
 	DiscoveryUnixTime           int64
 	Antenna                     uint8
 	IP                          string

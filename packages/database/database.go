@@ -11,6 +11,13 @@ import (
 
 var Db *sql.DB
 
+// Buffer for new RFID requests
+var laps []Data.Lap
+
+// channel lockers
+var lapsChannelBufferLocker = make(chan int, 1)
+var lapsChannelDBLocker = make(chan int, 1)
+
 func init() {
 	var err error
 	if Config.DB_TYPE == "genji" {
@@ -144,4 +151,5 @@ func SelectFromDB() {
 	}
 	fmt.Println(lap.TagID, lap.DiscoveryMinimalUnixTime)
 }
+
 
