@@ -94,7 +94,7 @@ func proxyWorkerRun(workerId int) {
 			//в случае если есть задание в канале proxyTask
 		case currentProxyTask := <- proxyTask :
 			//fmt.Println("proxyWorker", workerId, "processing new job...")
-			_, networkSendingError := fmt.Fprintf(connection, "%s, %d, %d, %s\n", currentProxyTask.TagID, currentProxyTask.DiscoveryUnixTime, currentProxyTask.Antenna, currentProxyTask.IP)
+			_, networkSendingError := fmt.Fprintf(connection, "%s, %d, %d, %s\n", currentProxyTask.TagID, currentProxyTask.DiscoveryUnixTime, currentProxyTask.Antenna, currentProxyTask.ReaderIP)
 			if err != nil {
 				//в случае потери связи во время отправки мы возвращаем задачу обратно в канал proxyTask
 				proxyTask <- currentProxyTask

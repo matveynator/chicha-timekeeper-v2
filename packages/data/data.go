@@ -4,7 +4,8 @@ type RawData  struct {
 	TagID                       string
 	DiscoveryUnixTime           int64
 	Antenna                     uint8
-	IP                          string
+	ReaderIP                    string
+	ProxyIP											string
 }
 
 type Lap struct {

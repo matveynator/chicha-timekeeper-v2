@@ -17,6 +17,11 @@ import (
 	//"chicha/packages/database"
 	"chicha/packages/proxy"
 )
+//initial function
+func init() {
+	//set microsecond resolution for logging:
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+}
 
 func IsValidXML(data []byte) bool {
 	return xml.Unmarshal(data, new(interface{})) == nil
@@ -59,39 +64,65 @@ func processConnection(connection net.Conn) {
 
 		data := buf[:size]
 
-		rawData.IP = fmt.Sprintf("%s", connection.RemoteAddr().(*net.TCPAddr).IP)
+		remoteIPAddress := connection.RemoteAddr().(*net.TCPAddr).IP.String()
 
 		//various data formats processing (text csv, xml) start:
 		if !IsValidXML(data) {
 			// CSV data processing
-			//log.Println("Received data is not XML, trying CSV text...")
-			//received data of type TEXT (parse TEXT).
-			r := csv.NewReader(bytes.NewReader(data))
-			r.Comma = ','
-			//r.FieldsPerRecord = 3
-			//make variable number of fields "-1"
-			r.FieldsPerRecord = -1
-			CSV, err := r.Read()
+			csvData, err := csv.NewReader(bytes.NewReader(data)).ReadAll()
 			if err != nil {
-				log.Println("Recived incorrect CSV data", err)
-				continue
+				log.Println(err)
+				return
 			}
 
-			// Prepare antenna position
-			antennaPosition, err := strconv.ParseInt(strings.TrimSpace(CSV[2]), 10, 64)
-			if err != nil {
-				log.Println("Recived incorrect Antenna position CSV value:", err)
-				continue
-			}
-			rawData.DiscoveryUnixTime, err = strconv.ParseInt(strings.TrimSpace(CSV[1]), 10, 64)
-			if err != nil {
-				log.Println("Recived incorrect discovery unix time CSV value:", err)
-				continue
-			}
-			rawData.TagID = strings.TrimSpace(CSV[0])
-			rawData.Antenna = uint8(antennaPosition)
+			csvNumRows := len(csvData)
+			log.Println("csvNumRows:", csvNumRows)
 
-			// XML data processing
+			for _, csvField := range csvData {
+				fmt.Println(len(csvField))
+				fmt.Println(csvField)
+				if len(csvField)==3 || len(csvField)==4 {
+
+					// Prepare antenna position
+					antennaPosition, err := strconv.ParseInt(string(strings.TrimSpace(csvField[2])), 10, 64)
+					if err != nil {
+						log.Println("Recived incorrect Antenna position CSV value:", err)
+						continue
+					}
+					rawData.DiscoveryUnixTime, err = strconv.ParseInt(string(strings.TrimSpace(csvField[1])), 10, 64)
+					if err != nil {
+						log.Println("Recived incorrect discovery unix time CSV value:", err)
+						continue
+					}
+					rawData.TagID = string(strings.TrimSpace(csvField[0]))
+					rawData.Antenna = uint8(antennaPosition)
+					if len(csvField) == 3 {
+						//reader connection without proxy
+						rawData.ReaderIP = remoteIPAddress
+
+						//Debug all received data from RFID reader
+						log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
+
+					} else if len(csvField) == 4 {
+						//proxy connection
+						if net.ParseIP(string(strings.TrimSpace(csvField[3]))) != nil {
+							//sending data with proxy
+							rawData.ReaderIP = string(strings.TrimSpace(csvField[3]))
+							rawData.ProxyIP = remoteIPAddress
+						} else {
+							//sending csvField[3] is not an IP address
+							rawData.ReaderIP = remoteIPAddress
+						}
+						//Debug all received data from PROXY
+						log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+
+					}
+					//create a proxy task if needed:
+					if Config.PROXY_ADDRESS != "" {
+						go Proxy.CreateNewProxyTask(rawData)
+					}
+				}
+			}
 		} else {
 			// XML data processing
 			// Prepare date
@@ -119,19 +150,26 @@ func processConnection(connection net.Conn) {
 
 			// Prepare antenna position
 			rawData.Antenna = uint8(rawData.Antenna)
+
+
+			if net.ParseIP(rawData.ReaderIP) != nil {
+				//connection from proxy
+				rawData.ProxyIP = remoteIPAddress
+
+				//Debug all received data from PROXY
+				log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+			} else {
+				//connection directly from reader
+				//Debug all received data from RFID reader
+				log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
+			}
+			//create a proxy task if needed:
+			if Config.PROXY_ADDRESS != "" {
+				go Proxy.CreateNewProxyTask(rawData)
+			}
 		}
-		//various data formats processing (text csv, xml) end.
 
-		//set microsecond resolution for logging:
-		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
-		//Debug all received data from RFID reader
-		log.Printf("TAG=%s, TIME=%d, IP=%s, ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.IP, rawData.Antenna)
-
-		if Config.PROXY_ADDRESS != "" {
-			go Proxy.CreateNewProxyTask(rawData)
-		}
-
-/*
+		/*
 		if len(laps) == 0 {
 			//laps buffer empty - recreate last race from db:
 			log.Println("laps buffer empty - recreate last race from db")
@@ -150,7 +188,7 @@ func processConnection(connection net.Conn) {
 			go Database.addNewLapToLapsBuffer(rawData)
 		}
 
-*/
+		*/
 	}
 }
 
