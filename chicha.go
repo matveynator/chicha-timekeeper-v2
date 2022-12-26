@@ -8,13 +8,10 @@ import (
 
 
 func main() {
-  //run error log daemon
+	//run error log daemon
 	go MyLog.ErrorLogWorker()
 
-  Database.CreateDB()
+	Database.CreateDB()
 	Database.UpdateDB()
-  Collector.StartDataCollector()
-
-
+	Collector.StartDataCollector()
 }
-

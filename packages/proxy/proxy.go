@@ -12,7 +12,7 @@ import (
 )
 //оставляем только один процесс который будет брать задачи и передавать их далее на другой сервер (чтобы сохранялась последовательность)
 var proxyWorkersMaxCount int = 1
-var proxyTask chan Data.RawData
+var ProxyTask chan Data.RawData
 var respawnLock chan int
 
 func init() {
@@ -20,7 +20,7 @@ func init() {
 	if Config.PROXY_ADDRESS != "" {
 
 		//initialise channel with tasks:
-		proxyTask = make(chan Data.RawData)
+		ProxyTask = make(chan Data.RawData)
 
 		//initialize unblocking channel to guard respawn tasks
 		respawnLock = make(chan int, proxyWorkersMaxCount)
@@ -44,7 +44,7 @@ func init() {
 
 func CreateNewProxyTask(taskData Data.RawData) {
 	//log.Println("new proxy task:", taskData.TagID)
-	proxyTask <- taskData
+	ProxyTask <- taskData
 }
 
 //close connection on programm exit
@@ -91,13 +91,13 @@ func proxyWorkerRun(workerId int) {
 
 	for {
 		select {
-			//в случае если есть задание в канале proxyTask
-		case currentProxyTask := <- proxyTask :
+			//в случае если есть задание в канале ProxyTask
+		case currentProxyTask := <- ProxyTask :
 			//fmt.Println("proxyWorker", workerId, "processing new job...")
 			_, networkSendingError := fmt.Fprintf(connection, "%s, %d, %d, %s\n", currentProxyTask.TagID, currentProxyTask.DiscoveryUnixTime, currentProxyTask.Antenna, currentProxyTask.ReaderIP)
 			if err != nil {
-				//в случае потери связи во время отправки мы возвращаем задачу обратно в канал proxyTask
-				proxyTask <- currentProxyTask
+				//в случае потери связи во время отправки мы возвращаем задачу обратно в канал ProxyTask
+				ProxyTask <- currentProxyTask
 				log.Printf("Proxy worker %d exited due to sending error: %s\n", workerId, networkSendingError)
 				//и завершаем работу гоурутины
 				return

@@ -6,7 +6,6 @@ import (
 	"log"
 	"net"
 	"time"
-	"fmt"
 	"strconv"
 	"strings"
 	"encoding/csv"
@@ -14,7 +13,6 @@ import (
 
 	"chicha/packages/config"
 	"chicha/packages/data"
-	//"chicha/packages/database"
 	"chicha/packages/proxy"
 )
 //initial function
@@ -75,14 +73,8 @@ func processConnection(connection net.Conn) {
 				return
 			}
 
-			csvNumRows := len(csvData)
-			log.Println("csvNumRows:", csvNumRows)
-
 			for _, csvField := range csvData {
-				fmt.Println(len(csvField))
-				fmt.Println(csvField)
 				if len(csvField)==3 || len(csvField)==4 {
-
 					// Prepare antenna position
 					antennaPosition, err := strconv.ParseInt(string(strings.TrimSpace(csvField[2])), 10, 64)
 					if err != nil {
@@ -119,7 +111,7 @@ func processConnection(connection net.Conn) {
 					}
 					//create a proxy task if needed:
 					if Config.PROXY_ADDRESS != "" {
-						go Proxy.CreateNewProxyTask(rawData)
+						Proxy.ProxyTask <- rawData
 					}
 				}
 			}
@@ -165,7 +157,7 @@ func processConnection(connection net.Conn) {
 			}
 			//create a proxy task if needed:
 			if Config.PROXY_ADDRESS != "" {
-				go Proxy.CreateNewProxyTask(rawData)
+				Proxy.ProxyTask <- rawData
 			}
 		}
 
@@ -194,15 +186,6 @@ func processConnection(connection net.Conn) {
 
 // Start data collector from RFID readers.
 func StartDataCollector() {
-
-	//unlock buffer operations
-	Config.ChannelBufferLocker <- 0 //Put the initial value into the channel to unlock operations
-
-	//unlock db operations
-	Config.ChannelDBLocker <- 0 //Put the initial value into the channel to unlock operations
-
-	//spin forever go routine to save in db with some interval:
-	//go saveLapsBufferToDB()
 
 	// Start listener
 	collector, err := net.Listen("tcp", Config.COLLECTOR_LISTENER_ADDRESS)
