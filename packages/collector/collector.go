@@ -42,16 +42,17 @@ func processConnection(connection net.Conn) {
 				break
 			}
 
-			if ne, ok := err.(*net.OpError); ok && ne.Temporary() {
+			networkError, ok := err.(*net.OpError) 
+			if ok && networkError.Temporary() {
 				if tempDelay == 0 {
 					tempDelay = 5 * time.Millisecond
 				} else {
-					tempDelay *= 2
+					tempDelay = 2 * tempDelay
 				}
 				if max := 1 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				log.Printf("http: Accept error: %v; retrying in %v", err, tempDelay)
+				log.Printf("Accept error: %v; retrying in %v", err, tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -117,14 +118,11 @@ func processConnection(connection net.Conn) {
 			}
 		} else {
 			// XML data processing
-			// Prepare date
-			//log.Println("Received data is valid XML")
 			err := xml.Unmarshal(data, &rawData)
 			if err != nil {
 				log.Println("xml.Unmarshal ERROR:", err)
 				continue
 			}
-			//log.Println("TIME_ZONE=", Config.TIME_ZONE)
 			loc, err := time.LoadLocation(Config.TIME_ZONE)
 			if err != nil {
 				log.Println(err)
@@ -137,26 +135,23 @@ func processConnection(connection net.Conn) {
 				continue
 			}
 			rawData.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
-			// Additional preparing for TagID
 			rawData.TagID = strings.ReplaceAll(rawData.TagID, " ", "")
-
-			// Prepare antenna position
 			rawData.Antenna = uint8(rawData.Antenna)
 
-
 			if net.ParseIP(rawData.ReaderIP) != nil {
-				//connection from proxy
+				//connection received from proxy (not from reader).
 				rawData.ProxyIP = remoteIPAddress
 
 				//Debug all received data from PROXY
 				log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
 			} else {
-				//connection directly from reader
+				//connection received from reader (not from proxy)
 				//Debug all received data from RFID reader
 				log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
 			}
-			//create a proxy task if needed:
+			//create a proxy task if needed (via Proxy.ProxyTask channel):
 			if Config.PROXY_ADDRESS != "" {
+				//send rawData to Proxy.ProxyTask channel
 				Proxy.ProxyTask <- rawData
 			}
 		}
