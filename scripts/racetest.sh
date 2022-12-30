@@ -77,8 +77,8 @@ function raceXML() {
 					unixtime=`date +%s%3N`
 				elif [ "${os}" == "Darwin" ]
 				then
-					time=`python -c "import datetime; date = datetime.datetime.today(); print(date.strftime('%Y/%m/%d %T.%f')[:-3]);"`
-					unixtime=`python -c 'import time; milliseconds = int(round(time.time() * 1000)); print(milliseconds);'`
+					time=`python3 -c "import datetime; date = datetime.datetime.today(); print(date.strftime('%Y/%m/%d %T.%f')[:-3]);"`
+					unixtime=`python3 -c 'import time; milliseconds = int(round(time.time() * 1000)); print(milliseconds);'`
 				else
 					time=`date +"%Y/%m/%d %T.%3N"`
 					unixtime=`date +%s%3N`

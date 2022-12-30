@@ -3,7 +3,9 @@ package Database
 import (
 	"fmt"
 	"log"
+	"time"
 	"database/sql"
+
 
 	"chicha/packages/config"
 	"chicha/packages/data"
@@ -14,12 +16,18 @@ var Db *sql.DB
 // Buffer for new RFID requests
 var laps []Data.Lap
 
+//incoming buffer for laps from readers
+var LapsTaskChannel = make(chan Data.Lap)
+
 // channel lockers
 var lapsChannelBufferLocker = make(chan int, 1)
 var lapsChannelDBLocker = make(chan int, 1)
 
 func init() {
 	var err error
+	//unlock db operations
+	lapsChannelDBLocker <- 0 //Put the initial value into the channel to unlock operations
+
 	if Config.DB_TYPE == "genji" {
 		Db, err = sql.Open(Config.DB_TYPE, Config.DB_FILE_PATH+"/"+Config.APP_NAME+".db."+Config.DB_TYPE)
 		if err != nil {
@@ -152,4 +160,60 @@ func SelectFromDB() {
 	fmt.Println(lap.TagID, lap.DiscoveryMinimalUnixTime)
 }
 
+
+func SaveLapsBufferSimplyToDB() {
+
+	//loop forever:
+	for range time.Tick(1 * time.Second) {
+		<-lapsChannelDBLocker //grab the ticket via channel (lock)
+		log.Println("Saving buffer to database started.")
+		for _, lap := range laps {
+			var newLap Data.Lap
+
+			err := Db.QueryRow("SELECT ID,SportsmanID,TagID,DiscoveryMinimalUnixTime,DiscoveryAverageUnixTime,UpdatedAt,RaceID,PracticeID,RacePosition,TimeBehindTheLeader,LapNumber,LapTime,LapPosition,LapIsCurrent,LapIsStrange,RaceFinished,BestLapTime,BestLapNumber,BestLapPosition,RaceTotalTime,BetterOrWorseLapTime FROM Lap WHERE TagID = ? and RaceID = ? and LapNumber = ? limit 1;", newLap.TagID, newLap.RaceID, newLap.LapNumber).Scan(&newLap.ID, &newLap.SportsmanID, &newLap.TagID, &newLap.DiscoveryMinimalUnixTime,  &newLap.DiscoveryAverageUnixTime, &newLap.UpdatedAt,  &newLap.RaceID,  &newLap.PracticeID,  &newLap.RacePosition,  &newLap.TimeBehindTheLeader,  &newLap.LapNumber,  &newLap.LapTime,  &newLap.LapPosition,  &newLap.LapIsCurrent,  &newLap.LapIsStrange,  &newLap.RaceFinished,  &newLap.BestLapTime,  &newLap.BestLapNumber,  &newLap.BestLapPosition,  &newLap.RaceTotalTime,  &newLap.BetterOrWorseLapTime)
+
+			log.Printf("race_id = %d, lap_number = %d, tag_id = %s, discovery_unix_time = %d \n", newLap.RaceID, newLap.LapNumber, newLap.TagID, newLap.DiscoveryMinimalUnixTime);
+			if err == nil {
+				//found old data - just update it:
+
+				newLap.SportsmanID = lap.SportsmanID
+				newLap.TagID = lap.TagID
+				newLap.DiscoveryMinimalUnixTime =  lap.DiscoveryMinimalUnixTime
+				newLap.DiscoveryAverageUnixTime = lap.DiscoveryAverageUnixTime
+				newLap.AverageResultsCount = lap.AverageResultsCount
+				newLap.Antenna  = lap.Antenna
+				newLap.AntennaIP  = lap.AntennaIP
+				newLap.UpdatedAt  = lap.UpdatedAt
+				newLap.RaceID = lap.RaceID
+				newLap.RacePosition = lap.RacePosition
+				newLap.TimeBehindTheLeader = lap.TimeBehindTheLeader
+				newLap.LapNumber = lap.LapNumber
+				newLap.LapTime = lap.LapTime
+				newLap.LapPosition = lap.LapPosition
+				newLap.LapIsCurrent = lap.LapIsCurrent
+				newLap.LapIsStrange = lap.LapIsStrange
+				newLap.StageFinished = lap.StageFinished
+				newLap.BestLapTime = lap.BestLapTime
+				newLap.BestLapNumber = lap.BestLapNumber
+				newLap.BestLapPosition = lap.BestLapPosition
+				newLap.RaceTotalTime = lap.RaceTotalTime
+				newLap.BetterOrWorseLapTime = lap.BetterOrWorseLapTime
+
+				err := UpdateLapInDB(newLap)
+				if err != nil {
+					log.Println("Error. Not updated in database:", err)
+				}
+			} else {
+				log.Println("Data not found in database:", err)
+				//not found - create new
+				_, err := InsertLapInDB(lap)
+				if err != nil {
+					log.Println("Error. Not created new data in database:", err)
+				}
+			}
+		}
+
+		lapsChannelDBLocker <- 1 //give ticket back via channel (unlock)
+	}
+}
 

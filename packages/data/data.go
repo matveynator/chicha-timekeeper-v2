@@ -14,6 +14,10 @@ type Lap struct {
 	TagID                       string
 	DiscoveryMinimalUnixTime    int64
 	DiscoveryAverageUnixTime    int64
+	AverageResultsCount					int
+	Antenna											int
+	AntennaIP										string
+
 	UpdatedAt                   int64
 	RaceID                      uint
 	PracticeID                  uint
@@ -24,6 +28,7 @@ type Lap struct {
 	LapPosition                 uint
 	LapIsCurrent                bool
 	LapIsStrange                bool
+	StageFinished								bool
 	RaceFinished                bool
 	BestLapTime                 int64
 	BestLapNumber               int
