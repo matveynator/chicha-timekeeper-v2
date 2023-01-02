@@ -11,32 +11,36 @@ import (
 	"chicha/packages/data"
 	"chicha/packages/config"
 )
-//оставляем только один процесс который будет брать задачи и записывать их в базу данных
 
-var databaseWorkersMaxCount int = 1
 var DatabaseTask chan Data.RawData
 var respawnLock chan int
+//по умолчанию оставляем только один процесс который будет брать задачи и записывать их в базу данных
+var databaseWorkersMaxCount int = 1
 
 func init() {
-
-	if Config.DB_TYPE != "" {
-
-		//initialise channel with tasks:
-		DatabaseTask = make(chan Data.RawData)
-
-		//initialize unblocking channel to guard respawn tasks
-		respawnLock = make(chan int, databaseWorkersMaxCount)
-
-		go func() {
-			for {
-				// will block if there is databaseWorkersMaxCount in respawnLock
-				respawnLock <- 1 
-				//sleep 1 second
-				time.Sleep(1 * time.Second)
-				go databaseWorkerRun(len(respawnLock))
-			}
-		}()
+	//у файловых бд оставляем только 1 коннект к базе
+	if Config.DB_TYPE == "genji" || Config.DB_TYPE == "sqlite" {
+		databaseWorkersMaxCount = 1
+	} else if Config.DB_TYPE == "postgres" {
+		//у постгреса делаем 3 коннекта в пуле
+		databaseWorkersMaxCount = 3
 	}
+
+	//initialise channel with tasks:
+	DatabaseTask = make(chan Data.RawData)
+
+	//initialize unblocking channel to guard respawn tasks
+	respawnLock = make(chan int, databaseWorkersMaxCount)
+
+	go func() {
+		for {
+			// will block if there is databaseWorkersMaxCount in respawnLock
+			respawnLock <- 1 
+			//sleep 1 second
+			time.Sleep(1 * time.Second)
+			go databaseWorkerRun(len(respawnLock))
+		}
+	}()
 }
 
 func CreateNewDatabaseTask(taskData Data.RawData) {
@@ -44,7 +48,7 @@ func CreateNewDatabaseTask(taskData Data.RawData) {
 	DatabaseTask <- taskData
 }
 
-//close connection on programm exit
+//close dbConnection on programm exit
 func deferCleanup(db *sql.DB) {
 	<-respawnLock
 	err := db.Close() 
@@ -55,9 +59,9 @@ func deferCleanup(db *sql.DB) {
 
 func databaseWorkerRun(workerId int) {
 
-	connection, err := connectToDb()
+	dbConnection, err := connectToDb()
 
-	defer deferCleanup(connection)
+	defer deferCleanup(dbConnection)
 
 	if err != nil  {
 		MyLog.Printonce(fmt.Sprintf("Database %s is unreachable. Error: %s",  Config.DB_TYPE, err))
@@ -67,21 +71,18 @@ func databaseWorkerRun(workerId int) {
 		MyLog.Println(fmt.Sprintf("Database worker #%d connected to %s database", workerId, Config.DB_TYPE))
 	}
 
-	//initialise connection error channel
+	//initialise dbConnection error channel
 	connectionErrorChannel := make(chan error)
 
 	go func() {
-		var id int64
 		for {
-			err := connection.QueryRow("SELECT ID FROM DBWatchDog").Scan(&id)
+			_, err = dbConnection.Exec("UPDATE DBWatchDog SET UnixTime = $1 WHERE ID = 1", time.Now().UnixMilli())
 			if err != nil {
 				connectionErrorChannel <- err
 				return
 			} else {
-				//do nothing (sleep):
-				if id == 1 {
-					time.Sleep(1 * time.Second)
-				}
+				//log.Println("Database is alive.")
+				time.Sleep(1 * time.Second)
 			}
 		}
 	}()

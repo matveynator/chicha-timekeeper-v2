@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"errors"
+	"time"
 
 	"database/sql"
 
@@ -110,7 +111,7 @@ func createTables(db *sql.DB) (err error) {
 		return
 	}
 
-	_, err = db.Exec("CREATE TABLE if not exists DBWatchDog(ID INT PRIMARY KEY)")
+	_, err = db.Exec("CREATE TABLE if not exists DBWatchDog(ID INT PRIMARY KEY, UnixTime INT)")
 	if err != nil {
 		return
 	} else {
@@ -118,10 +119,12 @@ func createTables(db *sql.DB) (err error) {
 		var id int64
 		// Create a sql/database DB instance
 		err = db.QueryRow("SELECT ID FROM DBWatchDog").Scan(&id)
-		if err != nil && id != 1 {
-			_, err = db.Exec("INSERT INTO DBWatchDog (ID) VALUES (?)", 1)
+		if err != nil  {
+			_, err = db.Exec("INSERT INTO DBWatchDog (ID,UnixTime) VALUES (?,?)", 1, time.Now().UnixMilli())
 			if err != nil {
 				return
+			} else {
+				log.Printf("Created new table structures in %s database.\n", Config.DB_TYPE)
 			}
 		}
 	}
