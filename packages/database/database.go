@@ -76,7 +76,7 @@ func databaseWorkerRun(workerId int) {
 
 	go func() {
 		for {
-			_, err = dbConnection.Exec("UPDATE DBWatchDog SET UnixTime = $1 WHERE ID = 1", time.Now().UnixMilli())
+			_, err = dbConnection.Exec("UPDATE DBWatchDog SET UnixTime = ? WHERE ID = 1", time.Now().UnixMilli())
 			if err != nil {
 				connectionErrorChannel <- err
 				return
