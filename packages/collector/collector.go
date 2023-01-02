@@ -13,6 +13,7 @@ import (
 
 	"chicha/packages/config"
 	"chicha/packages/data"
+	"chicha/packages/database"
 	"chicha/packages/proxy"
 )
 //initial function
@@ -114,6 +115,9 @@ func processConnection(connection net.Conn) {
 					if Config.PROXY_ADDRESS != "" {
 						Proxy.ProxyTask <- rawData
 					}
+
+					//create a database task:
+					Database.DatabaseTask <- rawData
 				}
 			}
 		} else {
@@ -154,6 +158,11 @@ func processConnection(connection net.Conn) {
 				//send rawData to Proxy.ProxyTask channel
 				Proxy.ProxyTask <- rawData
 			}
+
+			//create a database task:
+			Database.DatabaseTask <- rawData
+
+
 		}
 
 		/*

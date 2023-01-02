@@ -1,7 +1,6 @@
 package main
 
 import (
-	"chicha/packages/database"
 	"chicha/packages/collector"
 	"chicha/packages/mylog"
 )
@@ -12,9 +11,11 @@ func main() {
 	go MyLog.ErrorLogWorker()
 
 	//spin forever go routine to save in db with some interval:
-	go Database.SaveLapsBufferSimplyToDB()
+	//go Database.SaveLapsBufferSimplyToDB()
 
-	Database.CreateDB()
-	Database.UpdateDB()
+	//Database.CreateDB()
+	//Database.UpdateDB()
+
 	Collector.StartDataCollector()
+
 }

@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/genjidb/genji v0.15.1
+	github.com/georgysavva/scany/v2 v2.0.0
 	github.com/jackc/pgx/v5 v5.2.0
 	modernc.org/sqlite v1.20.0
 )
@@ -30,7 +31,7 @@ require (
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/exp v0.0.0-20200513190911-00229845015e // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
