@@ -91,7 +91,7 @@ func databaseWorkerRun(workerId int) {
 		select {
 			//в случае если есть задание в канале DatabaseTask
 		case currentDatabaseTask := <- DatabaseTask :
-			log.Println(currentDatabaseTask.TagID)
+			log.Println("Received new database task with TagID:", currentDatabaseTask.TagID)
 			//do come task:
 		case networkError := <-connectionErrorChannel :
 			//обнаружена сетевая ошибка - завершаем гоурутину
