@@ -15,6 +15,7 @@ import (
 	"chicha/packages/data"
 	"chicha/packages/database"
 	"chicha/packages/proxy"
+	"chicha/packages/timekeeper"
 )
 //initial function
 func init() {
@@ -116,6 +117,9 @@ func processConnection(connection net.Conn) {
 						Proxy.ProxyTask <- rawData
 					}
 
+					//create timekeeper task:
+					Timekeeper.TimekeeperTask <- rawData
+
 					//create a database task:
 					Database.DatabaseTask <- rawData
 				}
@@ -158,6 +162,9 @@ func processConnection(connection net.Conn) {
 				//send rawData to Proxy.ProxyTask channel
 				Proxy.ProxyTask <- rawData
 			}
+
+			//create timekeeper task:
+			Timekeeper.TimekeeperTask <- rawData
 
 			//create a database task:
 			Database.DatabaseTask <- rawData

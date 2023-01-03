@@ -18,13 +18,6 @@ var respawnLock chan int
 var databaseWorkersMaxCount int = 1
 
 func init() {
-	//у файловых бд оставляем только 1 коннект к базе
-	if Config.DB_TYPE == "genji" || Config.DB_TYPE == "sqlite" {
-		databaseWorkersMaxCount = 1
-	} else if Config.DB_TYPE == "postgres" {
-		//у постгреса делаем 3 коннекта в пуле
-		databaseWorkersMaxCount = 3
-	}
 
 	//initialise channel with tasks:
 	DatabaseTask = make(chan Data.RawData)
