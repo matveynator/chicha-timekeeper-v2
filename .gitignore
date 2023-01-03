@@ -1,5 +1,6 @@
 chicha
 binaries/
 DELETEME/
-chicha.db.sqlite
-chicha.db.genji
+chicha.*.db.sqlite
+chicha.*.db.genji
+

@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"flag"
 	"time"
+	"hash/fnv"
 )
 
 var APP_NAME = "chicha"
-var VERSION, _LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS, WEB_LISTENER_ADDRESS, PROXY_ADDRESS, DB_TYPE, DB_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE string
+var VERSION, COLLECTOR_LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS_HASH, WEB_LISTENER_ADDRESS, PROXY_ADDRESS, DB_TYPE, DB_FILE_PATH, DB_FULL_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE string
 var PG_PORT int
 var AVERAGE_RESULTS bool
 var RACE_TIMEOUT_DURATION, MINIMAL_LAP_TIME_DURATION time.Duration
@@ -26,6 +27,12 @@ func isFlagPassed(name string) bool {
 		}
 	})
 	return found
+}
+
+func hash(s string) string {
+	hash := fnv.New32a()
+	hash.Write([]byte(s))
+	return fmt.Sprint(hash.Sum32())
 }
 
 
@@ -54,7 +61,12 @@ func init()  {
 
 	//process all flags
 	flag.Parse()
+	
+	//делаем хеш от порта коллектора чтобы использовать в уникальном названии файла бд
+	COLLECTOR_LISTENER_ADDRESS_HASH = hash(COLLECTOR_LISTENER_ADDRESS)
 
+	//путь к файлу бд
+	DB_FULL_FILE_PATH = fmt.Sprintf(DB_FILE_PATH+"/"+APP_NAME+"."+COLLECTOR_LISTENER_ADDRESS_HASH+".db."+DB_TYPE)
 
 	if *flagVersion  {
 		if VERSION != "" {
