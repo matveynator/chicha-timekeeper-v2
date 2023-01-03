@@ -94,7 +94,7 @@ func databaseWorkerRun(workerId int) {
 			//log.Println("Received new database task with TagID:", currentDatabaseTask.TagID)
 			_, err := InsertRawDataInDB(dbConnection, currentDatabaseTask)
 			if err != nil {
-				log.Printf("Database worker %d exited due to error: %s\n", workerId, err)
+				log.Printf("Database worker %d exited due to processing error: %s\n", workerId, err)
 				return
 			}
 			//do come task:
