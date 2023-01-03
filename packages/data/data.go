@@ -3,8 +3,8 @@ package Data
 type RawData  struct {
 	TagID                       string
 	DiscoveryUnixTime           int64
-	Antenna                     uint8
 	ReaderIP                    string
+	Antenna                     uint8
 	ProxyIP											string
 }
 

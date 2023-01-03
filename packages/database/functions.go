@@ -9,6 +9,7 @@ import (
 	"database/sql"
 
 	"chicha/packages/config"
+	"chicha/packages/data"
 )
 
 
@@ -125,7 +126,7 @@ func createTables(db *sql.DB) (err error) {
 		return
 	}
 
-	_, err = db.Exec("CREATE TABLE if not exists AverageResults(ID INT PRIMARY KEY, LapID INT DEFAULT 0, TagID TEXT, DiscoveryUnixTime INT DEFAULT 0, Antenna INT DEFAULT 0, AntennaIP TEXT DEFAULT 0, UNIQUE(ID))")
+	_, err = db.Exec("CREATE TABLE if not exists RawData(ID INT NOT NULL, TagID TEXT, DiscoveryUnixTime INT,  ReaderIP TEXT, Antenna INT, ProxyIP TEXT, PRIMARY KEY(ID))")
 	if err != nil {
 		return
 	}
@@ -133,3 +134,15 @@ func createTables(db *sql.DB) (err error) {
 	return
 }
 
+
+func InsertRawDataInDB (databaseConnection *sql.DB, rawData Data.RawData) (id int64, err error) {
+	err = databaseConnection.QueryRow("SELECT ID FROM RawData order by ID desc limit 1").Scan(&id)
+	if err != nil {
+		id=1
+	} else {
+		id++
+	}
+
+	_, err = databaseConnection.Exec("INSERT INTO RawData(ID,TagID,DiscoveryUnixTime,ReaderIP,Antenna,ProxyIP) VALUES (?, ?, ?, ?, ?, ?)", id, rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+	return
+}

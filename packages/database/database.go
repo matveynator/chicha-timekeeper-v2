@@ -91,7 +91,12 @@ func databaseWorkerRun(workerId int) {
 		select {
 			//в случае если есть задание в канале DatabaseTask
 		case currentDatabaseTask := <- DatabaseTask :
-			log.Println("Received new database task with TagID:", currentDatabaseTask.TagID)
+			//log.Println("Received new database task with TagID:", currentDatabaseTask.TagID)
+			_, err := InsertRawDataInDB(dbConnection, currentDatabaseTask)
+			if err != nil {
+				log.Printf("Database worker %d exited due to error: %s\n", workerId, err)
+				return
+			}
 			//do come task:
 		case networkError := <-connectionErrorChannel :
 			//обнаружена сетевая ошибка - завершаем гоурутину
