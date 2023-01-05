@@ -168,30 +168,7 @@ func processConnection(connection net.Conn) {
 
 			//create a database task:
 			Database.DatabaseTask <- rawData
-
-
 		}
-
-		/*
-		if len(laps) == 0 {
-			//laps buffer empty - recreate last race from db:
-			log.Println("laps buffer empty - recreate last race from db")
-			laps, err = Database.GetCurrentRaceDataFromDB()
-			if err == nil {
-				log.Printf("laps buffer recreated with %d records from db.\n", len(laps))
-				go Database.addNewLapToLapsBuffer(rawData)
-			} else {
-				log.Println("laps buffer recreation failed with:", err)
-				go Database.addNewLapToLapsBuffer(rawData)
-			}
-		}
-
-		if len(laps) > 0 {
-			// Add current Lap to Laps buffer
-			go Database.addNewLapToLapsBuffer(rawData)
-		}
-
-		*/
 	}
 }
 
