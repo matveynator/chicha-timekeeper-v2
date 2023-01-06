@@ -76,7 +76,7 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 	return
 }
 
-func ParseXMLPacket(data []byte, remoteIPAddress string)(rawData Data.RawData, err error) {
+func parseXMLPacket(data []byte, remoteIPAddress string)(rawData Data.RawData, err error) {
 	if IsValidXML(data) {
 		// XML data processing
 		err = xml.Unmarshal(data, &rawData)

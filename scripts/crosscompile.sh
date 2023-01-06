@@ -5,6 +5,18 @@ execution_file="chicha"
 
 go mod download
 go mod vendor
+go mod tidy
+
+echo "Performing tests on all modules..."
+go test -v ./...
+if [ $? != "0" ] 
+	then
+		echo "Tests on all modules failed."
+		echo "Press any key to continue compilation or CTRL+C to abort."
+		read
+	else 
+		echo "Tests on all modules passed."
+fi
 
 cd ${git_root_path}/scripts;
 

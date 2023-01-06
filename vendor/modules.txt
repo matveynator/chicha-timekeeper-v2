@@ -100,10 +100,6 @@ github.com/genjidb/genji/internal/stringutil
 github.com/genjidb/genji/internal/tree
 github.com/genjidb/genji/lib/atomic
 github.com/genjidb/genji/types
-# github.com/georgysavva/scany/v2 v2.0.0
-## explicit; go 1.18
-github.com/georgysavva/scany/v2/dbscan
-github.com/georgysavva/scany/v2/sqlscan
 # github.com/getsentry/sentry-go v0.12.0
 ## explicit; go 1.15
 github.com/getsentry/sentry-go

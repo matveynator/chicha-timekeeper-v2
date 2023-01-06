@@ -66,7 +66,7 @@ func processConnection(connection net.Conn) {
 			}
 		} else {
 			// XML data processing
-			rawData, err = ParseXMLPacket(data, remoteIPAddress)
+			rawData, err = parseXMLPacket(data, remoteIPAddress)
 			if err != nil {
 				log.Println(err)
 			}

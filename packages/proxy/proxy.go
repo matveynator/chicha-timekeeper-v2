@@ -84,7 +84,7 @@ func proxyWorkerRun(workerId int) {
 				return
 			}
 			if numberOfLines > 0 {
-				log.Println("Proxy worker received unexpected data back: %s", buffer[:numberOfLines])
+				log.Printf("Proxy worker received unexpected data back: %s", buffer[:numberOfLines])
 			}
 		}
 	}()

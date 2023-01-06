@@ -22,14 +22,14 @@ func connectToDb()(db *sql.DB, err error) {
 			log.Println("Genji is unsupported on this architecture, switching to sqlite db type.")
 			db, err = sql.Open(Config.DB_TYPE, Config.DB_FULL_FILE_PATH)
 			if err != nil {
-				err = errors.New(fmt.Sprintf("Database file error:", err.Error()))
+				err = errors.New(fmt.Sprintf("Database file error: %s", err.Error()))
 				log.Println(err)
 				log.Println("SQLite is unsupported on this architecture, please use: -dbtype postgres.")
 				return
 			} else {
 				err = createTables(db)
 				if err != nil {
-					err = errors.New(fmt.Sprintf("Database create tables error:", err.Error()))
+					err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 					log.Println(err)
 					return
 				}
@@ -37,7 +37,7 @@ func connectToDb()(db *sql.DB, err error) {
 		} else {
 			err = createTables(db)
 			if err != nil {
-				err = errors.New(fmt.Sprintf("Database create tables error:", err.Error()))
+				err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 				log.Println(err)
 				return
 			}
@@ -50,14 +50,14 @@ func connectToDb()(db *sql.DB, err error) {
 			log.Println("SQLite is unsupported on this architecture, switching to genji db type.")
 			db, err = sql.Open(Config.DB_TYPE, Config.DB_FULL_FILE_PATH)
 			if err != nil {
-				err = errors.New(fmt.Sprintf("Database file error:", err.Error()))
+				err = errors.New(fmt.Sprintf("Database file error: %s", err.Error()))
 				log.Println(err)
 				log.Println("Genji is unsupported on this architecture, please use: -dbtype postgres.")
 				return
 			} else {
 				err = createTables(db)
 				if err != nil {
-					err = errors.New(fmt.Sprintf("Database create tables error:", err.Error()))
+					err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 					log.Println(err)
 					return
 				}
@@ -65,7 +65,7 @@ func connectToDb()(db *sql.DB, err error) {
 		} else {
 			err = createTables(db)
 			if err != nil {
-				err = errors.New(fmt.Sprintf("Database create tables error:", err.Error()))
+				err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 				log.Println(err)
 				return
 			}
@@ -75,19 +75,19 @@ func connectToDb()(db *sql.DB, err error) {
 		psqlConnectDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s pool_max_conns=10", Config.PG_HOST, Config.PG_PORT, Config.PG_USER, Config.PG_PASS, Config.PG_DB_NAME, Config.PG_SSL)
 		db, err = sql.Open("pgx", psqlConnectDSN)
 		if err != nil {
-			err = errors.New(fmt.Sprintf("Database config error:", err.Error()))
+			err = errors.New(fmt.Sprintf("Database config error: %s", err.Error()))
 			log.Println(err)
 			return
 		}
 		err = db.Ping()
 		if err != nil {
-			err = errors.New(fmt.Sprintf("Database connect error:", err.Error()))
+			err = errors.New(fmt.Sprintf("Database connect error: %s", err.Error()))
 			log.Println(err)
 			return
 		} else {
 			err = createTables(db)
 			if err != nil {
-				err = errors.New(fmt.Sprintf("Database create tables error:", err.Error()))
+				err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 				log.Println(err)
 				return
 			}
