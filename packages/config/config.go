@@ -36,7 +36,7 @@ func hash(s string) string {
 }
 
 
-func init()  {
+func ParseFlags()  {
 
 	flagVersion := flag.Bool("version", false, "Output version information")
 	flag.StringVar(&COLLECTOR_LISTENER_ADDRESS, "collector", "0.0.0.0:4000", "Provide IP address and port to collect and parse data from RFID and timing readers.")

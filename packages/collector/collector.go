@@ -89,6 +89,8 @@ func processConnection(connection net.Conn) {
 
 // Start data collector from RFID readers.
 func StartDataCollector() {
+	//parse configuration:
+	Config.ParseFlags()
 
 	// Start listener
 	collector, err := net.Listen("tcp", Config.COLLECTOR_LISTENER_ADDRESS)
