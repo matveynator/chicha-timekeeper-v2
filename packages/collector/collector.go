@@ -1,15 +1,10 @@
 package Collector
 
 import (
-	"bytes"
 	"io"
 	"log"
 	"net"
 	"time"
-	"strconv"
-	"strings"
-	"encoding/csv"
-	"encoding/xml"
 
 	"chicha/packages/config"
 	"chicha/packages/data"
@@ -22,11 +17,6 @@ func init() {
 	//set microsecond resolution for logging:
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 }
-
-func IsValidXML(data []byte) bool {
-	return xml.Unmarshal(data, new(interface{})) == nil
-}
-
 
 func processConnection(connection net.Conn) {
 	defer connection.Close()
@@ -70,105 +60,30 @@ func processConnection(connection net.Conn) {
 		//various data formats processing (text csv, xml) start:
 		if !IsValidXML(data) {
 			// CSV data processing
-			csvData, err := csv.NewReader(bytes.NewReader(data)).ReadAll()
+			rawData, err = parseCSVLine(data, remoteIPAddress)
 			if err != nil {
 				log.Println(err)
-				return
-			}
-
-			for _, csvField := range csvData {
-				if len(csvField)==3 || len(csvField)==4 {
-					// Prepare antenna position
-					antennaPosition, err := strconv.ParseInt(string(strings.TrimSpace(csvField[2])), 10, 64)
-					if err != nil {
-						log.Println("Recived incorrect Antenna position CSV value:", err)
-						continue
-					}
-					rawData.DiscoveryUnixTime, err = strconv.ParseInt(string(strings.TrimSpace(csvField[1])), 10, 64)
-					if err != nil {
-						log.Println("Recived incorrect discovery unix time CSV value:", err)
-						continue
-					}
-					rawData.TagID = string(strings.TrimSpace(csvField[0]))
-					rawData.Antenna = uint8(antennaPosition)
-					if len(csvField) == 3 {
-						//reader connection without proxy
-						rawData.ReaderIP = remoteIPAddress
-
-						//Debug all received data from RFID reader
-						log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
-
-					} else if len(csvField) == 4 {
-						//proxy connection
-						if net.ParseIP(string(strings.TrimSpace(csvField[3]))) != nil {
-							//sending data with proxy
-							rawData.ReaderIP = string(strings.TrimSpace(csvField[3]))
-							rawData.ProxyIP = remoteIPAddress
-						} else {
-							//sending csvField[3] is not an IP address
-							rawData.ReaderIP = remoteIPAddress
-						}
-						//Debug all received data from PROXY
-						log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
-
-					}
-					//create a proxy task if needed:
-					if Config.PROXY_ADDRESS != "" {
-						Proxy.ProxyTask <- rawData
-					}
-
-					//create timekeeper task:
-					Timekeeper.TimekeeperTask <- rawData
-
-					//create a database task:
-					Database.DatabaseTask <- rawData
-				}
 			}
 		} else {
 			// XML data processing
-			err := xml.Unmarshal(data, &rawData)
-			if err != nil {
-				log.Println("xml.Unmarshal ERROR:", err)
-				continue
-			}
-			loc, err := time.LoadLocation(Config.TIME_ZONE)
+			rawData, err = ParseXMLPacket(data, remoteIPAddress)
 			if err != nil {
 				log.Println(err)
-				continue
 			}
-			xmlTimeFormat := `2006/01/02 15:04:05.000`
-			discoveryTime, err := time.ParseInLocation(xmlTimeFormat, string(rawData.DiscoveryUnixTime), loc)
-			if err != nil {
-				log.Println("time.ParseInLocation ERROR:", err)
-				continue
-			}
-			rawData.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
-			rawData.TagID = strings.ReplaceAll(rawData.TagID, " ", "")
-			rawData.Antenna = uint8(rawData.Antenna)
-
-			if net.ParseIP(rawData.ReaderIP) != nil {
-				//connection received from proxy (not from reader).
-				rawData.ProxyIP = remoteIPAddress
-
-				//Debug all received data from PROXY
-				log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
-			} else {
-				//connection received from reader (not from proxy)
-				//Debug all received data from RFID reader
-				log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
-			}
-			//create a proxy task if needed (via Proxy.ProxyTask channel):
-			if Config.PROXY_ADDRESS != "" {
-				//send rawData to Proxy.ProxyTask channel
-				Proxy.ProxyTask <- rawData
-			}
-
-			//create timekeeper task:
-			Timekeeper.TimekeeperTask <- rawData
-
-			//create a database task:
-			Database.DatabaseTask <- rawData
 		}
+
+		//create a proxy task if needed (via Proxy.ProxyTask channel):
+		if Config.PROXY_ADDRESS != "" {
+			//send rawData to Proxy.ProxyTask channel
+			Proxy.ProxyTask <- rawData
+		}
+
+		//create timekeeper task:
+		Timekeeper.TimekeeperTask <- rawData
+
+		//create a database task:
+		Database.DatabaseTask <- rawData
+
 	}
 }
 
