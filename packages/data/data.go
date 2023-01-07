@@ -2,11 +2,19 @@ package Data
 
 type RawData  struct {
 	TagID                       string
-	DiscoveryUnixTime           int64
+	DiscoveryUnixTime           int64 
 	ReaderIP                    string
 	Antenna                     uint8
 	ProxyIP											string
 }
+
+type RawXMLData  struct {
+	TagID                       string
+	DiscoveryTime           		string
+	Antenna                     uint8
+	ReaderIP										string
+}
+
 
 type Lap struct {
 	ID                          int64

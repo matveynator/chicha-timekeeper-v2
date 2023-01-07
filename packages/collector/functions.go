@@ -80,36 +80,39 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 func parseXMLPacket(data []byte, remoteIPAddress string)(rawData Data.RawData, err error) {
 	if IsValidXML(data) {
 		// XML data processing
-		err = xml.Unmarshal(data, &rawData)
+		var rawXMLData Data.RawXMLData
+		err = xml.Unmarshal(data, &rawXMLData)
 		if err != nil {
 			log.Println("xml.Unmarshal ERROR:", err)
-			return
+			//return
 		}
 		var loc *time.Location
 		loc, err = time.LoadLocation(Config.TIME_ZONE)
 		if err != nil {
 			log.Println(err)
-			return
+			//return
 		}
 		xmlTimeFormat := `2006/01/02 15:04:05.000`
 		var discoveryTime time.Time
-		discoveryTime, err = time.ParseInLocation(xmlTimeFormat, fmt.Sprint(rawData.DiscoveryUnixTime), loc)
+		discoveryTime, err = time.ParseInLocation(xmlTimeFormat, fmt.Sprint(rawXMLData.DiscoveryTime), loc)
 		if err != nil {
 			log.Println("time.ParseInLocation ERROR:", err)
 			return
 		}
 		rawData.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
-		rawData.TagID = strings.ReplaceAll(rawData.TagID, " ", "")
-		rawData.Antenna = uint8(rawData.Antenna)
+		rawData.TagID = strings.ReplaceAll(rawXMLData.TagID, " ", "")
+		rawData.Antenna = uint8(rawXMLData.Antenna)
 
-		if net.ParseIP(rawData.ReaderIP) != nil {
+		if net.ParseIP(rawXMLData.ReaderIP) != nil {
 			//connection received from proxy (not from reader).
+			rawData.ReaderIP = rawXMLData.ReaderIP
 			rawData.ProxyIP = remoteIPAddress
 
 			//Debug all received data from PROXY
 			log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
 		} else {
 			//connection received from reader (not from proxy)
+			rawData.ReaderIP = remoteIPAddress
 			//Debug all received data from RFID reader
 			log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
 		}

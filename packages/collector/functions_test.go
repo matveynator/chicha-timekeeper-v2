@@ -29,3 +29,28 @@ func TestParseCSVLine(t *testing.T) {
 		}
 	}
 }
+
+func TestParseXMLPacket(t *testing.T) {
+
+	testData := []struct {
+		xmlInput []byte
+		xmlOutput Data.RawData
+	}{
+		{
+			xmlInput: []byte("<Alien-RFID-Tag><TagID>1000 0802 0200 0001 0000 0796</TagID><DiscoveryTime>2021/05/16 12:00:34.730</DiscoveryTime><LastSeenTime>2021/05/16 12:00:34.730</LastSeenTime><Antenna>2</Antenna><ReadCount>1</ReadCount><Protocol>2</Protocol></Alien-RFID-Tag>"),
+			xmlOutput: Data.RawData{ "100008020200000100000796", 1621166434730, "8.8.8.8", 2, "" },
+		},
+		{
+			xmlInput: []byte("<Alien-RFID-Tag><TagID>TONIBOU-001</TagID><DiscoveryTime>2021/05/16 12:00:34.823</DiscoveryTime><LastSeenTime>2021/05/16 12:00:34.823</LastSeenTime><Antenna>3</Antenna><ReaderIP>9.9.9.9</ReaderIP><ReadCount>1</ReadCount><Protocol>2</Protocol></Alien-RFID-Tag>"),
+			xmlOutput: Data.RawData{"TONIBOU-001", 1621166434823, "9.9.9.9", 3, "8.8.8.8" },
+		},
+	}
+
+	for _,testCase := range testData {
+		//check1:
+		testResult, _ := parseXMLPacket(testCase.xmlInput, "8.8.8.8")
+		if testResult != testCase.xmlOutput  {
+			t.Errorf("Incorrect result. Expect %v, got %v", testCase.xmlOutput, testResult)
+		}
+	}
+}
