@@ -75,7 +75,6 @@ func processConnection(connection net.Conn, config Config.Settings) {
 		//create a proxy task if needed (via Proxy.ProxyTask channel):
 		if config.PROXY_ADDRESS != "" {
 			//send rawData to Proxy.ProxyTask channel
-			log.Println("sending to proxy")
 			Proxy.ProxyTask <- rawData
 		}
 
