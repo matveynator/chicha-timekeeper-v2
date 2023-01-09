@@ -89,7 +89,7 @@ func processConnection(connection net.Conn, config Config.Settings) {
 }
 
 // Start data collector from RFID readers.
-func StartDataCollector(config Config.Settings) {
+func Run(config Config.Settings) {
 	// Start listener
 	collector, err := net.Listen("tcp", config.COLLECTOR_LISTENER_ADDRESS)
 	if err != nil {

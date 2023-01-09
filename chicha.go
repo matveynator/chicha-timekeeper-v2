@@ -16,5 +16,10 @@ func main() {
 	go MyLog.ErrorLogWorker()
 	go Database.Run(settings)
 	go Proxy.Run(settings)
-	Collector.StartDataCollector(settings)
+	go Collector.Run(settings)
+
+	for {
+		
+	}
+
 }
