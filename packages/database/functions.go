@@ -13,21 +13,21 @@ import (
 )
 
 
-func connectToDb()(db *sql.DB, err error) {
-	if Config.DB_TYPE == "genji" {
-		db, err = sql.Open(Config.DB_TYPE, Config.DB_FULL_FILE_PATH)
+func connectToDb(config Config.Settings)(db *sql.DB, err error) {
+	if config.DB_TYPE == "genji" {
+		db, err = sql.Open(config.DB_TYPE, config.DB_FULL_FILE_PATH)
 		if err != nil {
-			Config.DB_TYPE = "sqlite"
+			config.DB_TYPE = "sqlite"
 			log.Println("Database error:", err)
 			log.Println("Genji is unsupported on this architecture, switching to sqlite db type.")
-			db, err = sql.Open(Config.DB_TYPE, Config.DB_FULL_FILE_PATH)
+			db, err = sql.Open(config.DB_TYPE, config.DB_FULL_FILE_PATH)
 			if err != nil {
 				err = errors.New(fmt.Sprintf("Database file error: %s", err.Error()))
 				log.Println(err)
 				log.Println("SQLite is unsupported on this architecture, please use: -dbtype postgres.")
 				return
 			} else {
-				err = createTables(db)
+				err = createTables(db, config)
 				if err != nil {
 					err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 					log.Println(err)
@@ -35,27 +35,27 @@ func connectToDb()(db *sql.DB, err error) {
 				}
 			}
 		} else {
-			err = createTables(db)
+			err = createTables(db, config)
 			if err != nil {
 				err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 				log.Println(err)
 				return
 			}
 		}
-	} else if Config.DB_TYPE == "sqlite" {
-		db, err = sql.Open(Config.DB_TYPE, Config.DB_FULL_FILE_PATH)
+	} else if config.DB_TYPE == "sqlite" {
+		db, err = sql.Open(config.DB_TYPE, config.DB_FULL_FILE_PATH)
 		if err != nil {
-			Config.DB_TYPE = "genji"
+			config.DB_TYPE = "genji"
 			log.Println("Database file error:", err)
 			log.Println("SQLite is unsupported on this architecture, switching to genji db type.")
-			db, err = sql.Open(Config.DB_TYPE, Config.DB_FULL_FILE_PATH)
+			db, err = sql.Open(config.DB_TYPE, config.DB_FULL_FILE_PATH)
 			if err != nil {
 				err = errors.New(fmt.Sprintf("Database file error: %s", err.Error()))
 				log.Println(err)
 				log.Println("Genji is unsupported on this architecture, please use: -dbtype postgres.")
 				return
 			} else {
-				err = createTables(db)
+				err = createTables(db, config)
 				if err != nil {
 					err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 					log.Println(err)
@@ -63,16 +63,16 @@ func connectToDb()(db *sql.DB, err error) {
 				}
 			}
 		} else {
-			err = createTables(db)
+			err = createTables(db, config)
 			if err != nil {
 				err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 				log.Println(err)
 				return
 			}
 		}
-	} else if Config.DB_TYPE == "postgres" {
+	} else if config.DB_TYPE == "postgres" {
 
-		psqlConnectDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s pool_max_conns=10", Config.PG_HOST, Config.PG_PORT, Config.PG_USER, Config.PG_PASS, Config.PG_DB_NAME, Config.PG_SSL)
+		psqlConnectDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s pool_max_conns=10", config.PG_HOST, config.PG_PORT, config.PG_USER, config.PG_PASS, config.PG_DB_NAME, config.PG_SSL)
 		db, err = sql.Open("pgx", psqlConnectDSN)
 		if err != nil {
 			err = errors.New(fmt.Sprintf("Database config error: %s", err.Error()))
@@ -85,7 +85,7 @@ func connectToDb()(db *sql.DB, err error) {
 			log.Println(err)
 			return
 		} else {
-			err = createTables(db)
+			err = createTables(db, config)
 			if err != nil {
 				err = errors.New(fmt.Sprintf("Database create tables error: %s", err.Error()))
 				log.Println(err)
@@ -101,7 +101,7 @@ func connectToDb()(db *sql.DB, err error) {
 }
 
 
-func createTables(db *sql.DB) (err error) {
+func createTables(db *sql.DB, config Config.Settings) (err error) {
 
 	_, err = db.Exec("CREATE TABLE if not exists DBWatchDog(ID INT PRIMARY KEY, UnixTime INT)")
 	if err != nil {
@@ -116,7 +116,7 @@ func createTables(db *sql.DB) (err error) {
 			if err != nil {
 				return
 			} else {
-				log.Printf("Created new %s database file: %s \n", Config.DB_TYPE, Config.DB_FULL_FILE_PATH)
+				log.Printf("Created new %s database file: %s \n", config.DB_TYPE, config.DB_FULL_FILE_PATH)
 			}
 		}
 	}

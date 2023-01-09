@@ -18,7 +18,7 @@ func init() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 }
 
-func processConnection(connection net.Conn) {
+func processConnection(connection net.Conn, config Config.Settings) {
 	defer connection.Close()
 	var tempDelay time.Duration // how long to sleep on accept failure
 	var rawData Data.RawData
@@ -66,15 +66,16 @@ func processConnection(connection net.Conn) {
 			}
 		} else {
 			// XML data processing
-			rawData, err = parseXMLPacket(data, remoteIPAddress)
+			rawData, err = parseXMLPacket(data, remoteIPAddress, config)
 			if err != nil {
 				log.Println(err)
 			}
 		}
 
 		//create a proxy task if needed (via Proxy.ProxyTask channel):
-		if Config.PROXY_ADDRESS != "" {
+		if config.PROXY_ADDRESS != "" {
 			//send rawData to Proxy.ProxyTask channel
+			log.Println("sending to proxy")
 			Proxy.ProxyTask <- rawData
 		}
 
@@ -88,12 +89,9 @@ func processConnection(connection net.Conn) {
 }
 
 // Start data collector from RFID readers.
-func StartDataCollector() {
-	//parse configuration:
-	Config.ParseFlags()
-
+func StartDataCollector(config Config.Settings) {
 	// Start listener
-	collector, err := net.Listen("tcp", Config.COLLECTOR_LISTENER_ADDRESS)
+	collector, err := net.Listen("tcp", config.COLLECTOR_LISTENER_ADDRESS)
 	if err != nil {
 		log.Panicln("Error: collector can't start. ", err)
 	}
@@ -109,7 +107,7 @@ func StartDataCollector() {
 			}
 		}
 
-		go processConnection(connection)
+		go processConnection(connection, config)
 	}
 }
 

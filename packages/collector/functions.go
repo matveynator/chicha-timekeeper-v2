@@ -77,7 +77,7 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 	return
 }
 
-func parseXMLPacket(data []byte, remoteIPAddress string)(rawData Data.RawData, err error) {
+func parseXMLPacket(data []byte, remoteIPAddress string, config Config.Settings)(rawData Data.RawData, err error) {
 	if IsValidXML(data) {
 		// XML data processing
 		var rawXMLData Data.RawXMLData
@@ -87,7 +87,7 @@ func parseXMLPacket(data []byte, remoteIPAddress string)(rawData Data.RawData, e
 			//return
 		}
 		var loc *time.Location
-		loc, err = time.LoadLocation(Config.TIME_ZONE)
+		loc, err = time.LoadLocation(config.TIME_ZONE)
 		if err != nil {
 			log.Println(err)
 			//return

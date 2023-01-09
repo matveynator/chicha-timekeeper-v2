@@ -17,8 +17,8 @@ var respawnLock chan int
 //по умолчанию оставляем только один процесс который будет брать задачи и записывать их в базу данных
 var databaseWorkersMaxCount int = 1
 
-func init() {
-
+func Run(config Config.Settings) {
+	
 	//initialise channel with tasks:
 	DatabaseTask = make(chan Data.RawData)
 
@@ -31,7 +31,7 @@ func init() {
 			respawnLock <- 1 
 			//sleep 1 second
 			time.Sleep(1 * time.Second)
-			go databaseWorkerRun(len(respawnLock))
+			go databaseWorkerRun(len(respawnLock), config)
 		}
 	}()
 }
@@ -50,18 +50,19 @@ func deferCleanup(db *sql.DB) {
 	}
 }
 
-func databaseWorkerRun(workerId int) {
+func databaseWorkerRun(workerId int, config Config.Settings ) {
+	
 
-	dbConnection, err := connectToDb()
+	dbConnection, err := connectToDb(config)
 
 	defer deferCleanup(dbConnection)
 
 	if err != nil  {
-		MyLog.Printonce(fmt.Sprintf("Database %s is unreachable. Error: %s",  Config.DB_TYPE, err))
+		MyLog.Printonce(fmt.Sprintf("Database %s is unreachable. Error: %s",  config.DB_TYPE, err))
 		return
 
 	} else {
-		MyLog.Println(fmt.Sprintf("Database worker #%d connected to %s database", workerId, Config.DB_TYPE))
+		MyLog.Println(fmt.Sprintf("Database worker #%d connected to %s database", workerId, config.DB_TYPE))
 	}
 
 	//initialise dbConnection error channel

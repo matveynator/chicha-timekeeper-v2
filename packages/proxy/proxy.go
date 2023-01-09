@@ -15,10 +15,11 @@ var proxyWorkersMaxCount int = 1
 var ProxyTask chan Data.RawData
 var respawnLock chan int
 
-func init() {
+func Run(config Config.Settings) {
 
-	if Config.PROXY_ADDRESS != "" {
+	if config.PROXY_ADDRESS != "" {
 
+		log.Println("connecting to 0", config.PROXY_ADDRESS)
 		//initialise channel with tasks:
 		ProxyTask = make(chan Data.RawData)
 
@@ -31,14 +32,9 @@ func init() {
 				respawnLock <- 1 
 				//sleep 1 second
 				time.Sleep(1 * time.Second)
-				go proxyWorkerRun(len(respawnLock))
+				go proxyWorkerRun(len(respawnLock), config)
 			}
 		}()
-
-		//for workerId := 1; workerId <= proxyWorkersMaxCount; workerId++ {
-		//	go proxyWorkerRun(workerId)
-		//}
-
 	}
 }
 
@@ -58,18 +54,18 @@ func deferCleanup(connection net.Conn) {
 	}
 }
 
-func proxyWorkerRun(workerId int) {
+func proxyWorkerRun(workerId int, config Config.Settings) {
 
-	connection, err := net.DialTimeout("tcp", Config.PROXY_ADDRESS, 15 * time.Second)
+	connection, err := net.DialTimeout("tcp", config.PROXY_ADDRESS, 15 * time.Second)
 
 	defer deferCleanup(connection)
 
 	if err != nil  {
-		MyLog.Printonce(fmt.Sprintf("Proxy destination %s unreachable. Error: %s",  Config.PROXY_ADDRESS, err))
+		MyLog.Printonce(fmt.Sprintf("Proxy destination %s unreachable. Error: %s",  config.PROXY_ADDRESS, err))
 		return
 
 	} else {
-		MyLog.Println(fmt.Sprintf("Proxy worker #%d connected to destination %s", workerId, Config.PROXY_ADDRESS))
+		MyLog.Println(fmt.Sprintf("Proxy worker #%d connected to destination %s", workerId, config.PROXY_ADDRESS))
 	}
 
 	//initialise connection error channel
