@@ -70,7 +70,7 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 					}
 				}
 			} else {
-				err = errors.New(fmt.Sprintf("Error: Parser expected 3 or 4 fields in CSV, but it received:", numberOfCSVColumns))
+				err = errors.New(fmt.Sprintf("Error: Parser expected 3 or 4 fields in CSV, but received %d fields.", numberOfCSVColumns))
 			}
 		}
 	} else {
