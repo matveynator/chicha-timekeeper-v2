@@ -1,6 +1,7 @@
 package Collector
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -21,53 +22,55 @@ func IsValidXML(data []byte) bool {
 func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, err error){
 	if !IsValidXML(data) {
 		// CSV data processing
-		var csvData [][]string
-		csvData, err = csv.NewReader(bytes.NewReader(data)).ReadAll()
+		var csvField []string
+		csvField, err = csv.NewReader(bytes.NewReader(data)).Read()
 		if err != nil {
 			log.Println(err)
 			return
-		}
-		for _, csvField := range csvData {
-		numberOfCSVColumns := len(csvField)
-		log.Println("ROWS:", len(csvData), "COL:", numberOfCSVColumns)
+		} else {
+			//if one packet received (valid):
+			numberOfCSVColumns := len(csvField)
 			if numberOfCSVColumns == 3 || numberOfCSVColumns == 4 {
 				// Prepare antenna position
-				antennaPosition, err := strconv.ParseInt(string(strings.TrimSpace(csvField[2])), 10, 64)
+				var antennaPosition int64
+				antennaPosition, err = strconv.ParseInt(string(strings.TrimSpace(csvField[2])), 10, 64)
 				if err != nil {
 					log.Println("Recived incorrect Antenna position CSV value:", err)
-					continue
-				}
-				rawData.DiscoveryUnixTime, err = strconv.ParseInt(string(strings.TrimSpace(csvField[1])), 10, 64)
-				if err != nil {
-					log.Println("Recived incorrect discovery unix time CSV value:", err)
-					continue
-				}
-				rawData.TagID = string(strings.TrimSpace(csvField[0]))
-				rawData.Antenna = uint8(antennaPosition)
-
-				if numberOfCSVColumns == 3 {
-					//reader connection without proxy
-					rawData.ReaderIP = remoteIPAddress
-
-					//Debug all received data from RFID reader
-					log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
-
-				} else if len(csvField) == 4 {
-					//proxy connection
-					if net.ParseIP(string(strings.TrimSpace(csvField[3]))) != nil {
-						//sending data with proxy
-						rawData.ReaderIP = string(strings.TrimSpace(csvField[3]))
-						rawData.ProxyIP = remoteIPAddress
+					return
+				} else { 
+					rawData.DiscoveryUnixTime, err = strconv.ParseInt(string(strings.TrimSpace(csvField[1])), 10, 64)
+					if err != nil {
+						log.Println("Recived incorrect discovery unix time CSV value:", err)
+						return
 					} else {
-						//sending csvField[3] is not an IP address
-						rawData.ReaderIP = remoteIPAddress
-					}
-					//Debug all received data from PROXY
-					log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+						rawData.TagID = string(strings.TrimSpace(csvField[0]))
+						rawData.Antenna = uint8(antennaPosition)
 
+						if numberOfCSVColumns == 3 {
+							//reader connection without proxy
+							rawData.ReaderIP = remoteIPAddress
+
+							//Debug all received data from RFID reader
+							log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
+
+						} else if numberOfCSVColumns == 4 {
+							//proxy connection
+							if net.ParseIP(string(strings.TrimSpace(csvField[3]))) != nil {
+								//sending data with proxy
+								rawData.ReaderIP = string(strings.TrimSpace(csvField[3]))
+								rawData.ProxyIP = remoteIPAddress
+							} else {
+								//sending csvField[3] is not an IP address
+								rawData.ReaderIP = remoteIPAddress
+							}
+							//Debug all received data from PROXY
+							log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+
+						}
+					}
 				}
 			} else {
-				err = errors.New("Error: received data is not a valid CSV.")
+				err = errors.New(fmt.Sprintf("Error: Parser expected 3 or 4 fields in CSV, but it received:", numberOfCSVColumns))
 			}
 		}
 	} else {
