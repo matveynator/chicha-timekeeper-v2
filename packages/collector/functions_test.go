@@ -50,7 +50,6 @@ func TestParseXMLPacket(t *testing.T) {
 	}
 
 	for _,testCase := range testData {
-		//check1:
 		testResult, _ := parseXMLPacket(testCase.xmlInput, "8.8.8.8", config)
 		if testResult != testCase.xmlOutput  {
 			t.Errorf("Incorrect result. Expect %v, got %v", testCase.xmlOutput, testResult)

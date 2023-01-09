@@ -2,7 +2,6 @@ package Collector
 import (
 	"bytes"
 	"log"
-	"fmt"
 	"net"
 	"time"
 	"strconv"
@@ -84,17 +83,17 @@ func parseXMLPacket(data []byte, remoteIPAddress string, config Config.Settings)
 		err = xml.Unmarshal(data, &rawXMLData)
 		if err != nil {
 			log.Println("xml.Unmarshal ERROR:", err)
-			//return
+			return
 		}
 		var loc *time.Location
 		loc, err = time.LoadLocation(config.TIME_ZONE)
 		if err != nil {
 			log.Println(err)
-			//return
+			return
 		}
 		xmlTimeFormat := `2006/01/02 15:04:05.000`
 		var discoveryTime time.Time
-		discoveryTime, err = time.ParseInLocation(xmlTimeFormat, fmt.Sprint(rawXMLData.DiscoveryTime), loc)
+		discoveryTime, err = time.ParseInLocation(xmlTimeFormat, rawXMLData.DiscoveryTime, loc)
 		if err != nil {
 			log.Println("time.ParseInLocation ERROR:", err)
 			return

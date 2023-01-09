@@ -39,7 +39,7 @@ func ParseFlags() (config Settings)  {
 	flag.StringVar(&config.COLLECTOR_LISTENER_ADDRESS, "collector", "0.0.0.0:4000", "Provide IP address and port to collect and parse data from RFID and timing readers.")
 	flag.StringVar(&config.WEB_LISTENER_ADDRESS, "web", "0.0.0.0:80", "Provide IP address and port to listen for HTTP connections from clients.")
 	flag.StringVar(&config.PROXY_ADDRESS, "proxy", "", "Proxy received data to another collector. For example: -proxy '10.9.8.7:4000'.")
-	flag.StringVar(&config.TIME_ZONE, "timezone", "Europe/London", "Set race timezone.")
+	flag.StringVar(&config.TIME_ZONE, "timezone", "UTC", "Set race timezone.")
 	flag.DurationVar(&config.RACE_TIMEOUT_DURATION, "timeout", 2*time.Minute, "Set race timeout duration. After this time if nobody passes the finish line the race will be stopped. Valid time units are: 's' (second), 'm' (minute), 'h' (hour).")
 	flag.DurationVar(&config.MINIMAL_LAP_TIME_DURATION, "laptime", 45*time.Second, "Minimal lap time duration. Results smaller than this duration would be considered wrong." )
 	flag.BoolVar(&config.AVERAGE_RESULTS, "average", true, "Calculate average results instead of only first results.")
