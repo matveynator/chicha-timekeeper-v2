@@ -6,9 +6,9 @@ import (
 	"net"
 	"time"
 
-	"chicha/packages/mylog"
-	"chicha/packages/data"
-	"chicha/packages/config"
+	"chicha/pkg/mylog"
+	"chicha/pkg/data"
+	"chicha/pkg/config"
 )
 //оставляем только один процесс который будет брать задачи и передавать их далее на другой сервер (чтобы сохранялась последовательность)
 var proxyWorkersMaxCount int = 1

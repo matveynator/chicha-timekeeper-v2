@@ -8,8 +8,8 @@ import (
 
 	"database/sql"
 
-	"chicha/packages/config"
-	"chicha/packages/data"
+	"chicha/pkg/config"
+	"chicha/pkg/data"
 )
 
 

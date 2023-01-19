@@ -2,8 +2,8 @@ package Collector
 
 import (
 	"testing"
-	"chicha/packages/data"
-	"chicha/packages/config"
+	"chicha/pkg/data"
+	"chicha/pkg/config"
 )
 
 func TestParseCSVLine(t *testing.T) {

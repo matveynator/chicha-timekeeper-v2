@@ -8,7 +8,7 @@ go mod vendor
 go mod tidy
 
 echo "Performing tests on all modules..."
-go test -v ./...
+go test ./...
 if [ $? != "0" ] 
 	then
 		echo "Tests on all modules failed."

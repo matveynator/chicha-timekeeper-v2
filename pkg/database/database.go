@@ -7,9 +7,9 @@ import (
 
 	"database/sql"
 
-	"chicha/packages/mylog"
-	"chicha/packages/data"
-	"chicha/packages/config"
+	"chicha/pkg/mylog"
+	"chicha/pkg/data"
+	"chicha/pkg/config"
 )
 
 var DatabaseTask chan Data.RawData

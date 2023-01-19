@@ -11,8 +11,8 @@ import (
 	"encoding/csv"
 	"encoding/xml"
 
-	"chicha/packages/config"
-	"chicha/packages/data"
+	"chicha/pkg/config"
+	"chicha/pkg/data"
 )
 func IsValidXML(data []byte) bool {
 	return xml.Unmarshal(data, new(interface{})) == nil

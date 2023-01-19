@@ -4,14 +4,14 @@ import (
 	"log"
 	"runtime"
 
-	"chicha/packages/data"
+	"chicha/pkg/data"
 )
 
 // To send a task: 
 //
 // import (
-// "chicha/packages/timekeeper"
-// "chicha/packages/data"
+// "chicha/pkg/timekeeper"
+// "chicha/pkg/data"
 // )
 //
 // Timekeeper.TimekeeperTask <- Data.RawData

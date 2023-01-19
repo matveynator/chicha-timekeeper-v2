@@ -6,11 +6,11 @@ import (
 	"net"
 	"time"
 
-	"chicha/packages/config"
-	"chicha/packages/data"
-	"chicha/packages/database"
-	"chicha/packages/proxy"
-	"chicha/packages/timekeeper"
+	"chicha/pkg/config"
+	"chicha/pkg/data"
+	"chicha/pkg/database"
+	"chicha/pkg/proxy"
+	"chicha/pkg/timekeeper"
 )
 //initial function
 func init() {

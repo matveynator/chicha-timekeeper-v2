@@ -2,11 +2,11 @@ package main
 
 import (
 	"time"
-	"chicha/packages/config"
-	"chicha/packages/collector"
-	"chicha/packages/database"
-	"chicha/packages/proxy"
-	"chicha/packages/mylog"
+	"chicha/pkg/config"
+	"chicha/pkg/collector"
+	"chicha/pkg/database"
+	"chicha/pkg/proxy"
+	"chicha/pkg/mylog"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 	go Collector.Run(settings)
 
 	for {
-		time.Sleep(500 * time.Millisecond)	
+		time.Sleep(10 * time.Second)	
 	}
 
 }
