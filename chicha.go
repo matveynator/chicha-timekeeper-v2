@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"chicha/packages/config"
 	"chicha/packages/collector"
 	"chicha/packages/database"
@@ -19,7 +20,7 @@ func main() {
 	go Collector.Run(settings)
 
 	for {
-		
+		time.Sleep(1 * time.Second)	
 	}
 
 }
