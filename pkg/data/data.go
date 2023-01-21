@@ -1,7 +1,7 @@
 package Data
 
 type RawData  struct {
-	TagID                       string
+	TagId                       string
 	DiscoveryUnixTime           int64 
 	ReaderIP                    string
 	Antenna                     uint8
@@ -9,7 +9,7 @@ type RawData  struct {
 }
 
 type RawXMLData  struct {
-	TagID                       string
+	TagId                       string
 	DiscoveryTime           		string
 	Antenna                     uint8
 	ReaderIP										string
@@ -17,18 +17,13 @@ type RawXMLData  struct {
 
 
 type Lap struct {
-	ID                          int64
-	SportsmanID                 string
-	TagID                       string
+	Id                          int64
+	SportsmanId                 string
+	TagId                       string
 	DiscoveryMinimalUnixTime    int64
 	DiscoveryAverageUnixTime    int64
 	AverageResultsCount					int
-	Antenna											int
-	AntennaIP										string
-
-	UpdatedAt                   int64
-	RaceID                      uint
-	PracticeID                  uint
+	RaceId                      uint
 	RacePosition                uint
 	TimeBehindTheLeader         int64
 	LapNumber                   int
@@ -36,11 +31,9 @@ type Lap struct {
 	LapPosition                 uint
 	LapIsCurrent                bool
 	LapIsStrange                bool
-	StageFinished								bool
 	RaceFinished                bool
 	BestLapTime                 int64
 	BestLapNumber               int
-	BestLapPosition             uint
 	RaceTotalTime               int64
 	BetterOrWorseLapTime        int64
 }

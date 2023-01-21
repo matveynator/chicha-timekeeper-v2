@@ -43,15 +43,15 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 						log.Println("Recived incorrect discovery unix time CSV value:", err)
 						return
 					} else {
-						rawData.TagID = string(strings.TrimSpace(csvField[0]))
+						rawData.TagId = string(strings.TrimSpace(csvField[0]))
 						rawData.Antenna = uint8(antennaPosition)
 
 						if numberOfCSVColumns == 3 {
 							//reader connection without proxy
 							rawData.ReaderIP = remoteIPAddress
 
-							//Debug all received data from RFID reader
-							log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
+							//Debug all received data from RFId reader
+							log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagId, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
 
 						} else if numberOfCSVColumns == 4 {
 							//proxy connection
@@ -64,7 +64,7 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 								rawData.ReaderIP = remoteIPAddress
 							}
 							//Debug all received data from PROXY
-							log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+							log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagId, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
 
 						}
 					}
@@ -102,7 +102,7 @@ func parseXMLPacket(data []byte, remoteIPAddress string, config Config.Settings)
 			return
 		}
 		rawData.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
-		rawData.TagID = strings.ReplaceAll(rawXMLData.TagID, " ", "")
+		rawData.TagId = strings.ReplaceAll(rawXMLData.TagId, " ", "")
 		rawData.Antenna = uint8(rawXMLData.Antenna)
 
 		if net.ParseIP(rawXMLData.ReaderIP) != nil {
@@ -111,12 +111,12 @@ func parseXMLPacket(data []byte, remoteIPAddress string, config Config.Settings)
 			rawData.ProxyIP = remoteIPAddress
 
 			//Debug all received data from PROXY
-			log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+			log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-Antenna=%d, Proxy-IP=%s\n", rawData.TagId, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
 		} else {
 			//connection received from reader (not from proxy)
 			rawData.ReaderIP = remoteIPAddress
 			//Debug all received data from RFID reader
-			log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
+			log.Printf("TAG=%s, TIME=%d, Reader-IP=%s, Reader-ANT=%d\n", rawData.TagId, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna)
 		}
 	} else {
 		err = errors.New("Error: received data is not a valid XML.")

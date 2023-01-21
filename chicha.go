@@ -7,6 +7,7 @@ import (
 	"chicha/pkg/database"
 	"chicha/pkg/proxy"
 	"chicha/pkg/mylog"
+	"chicha/pkg/timekeeper"
 )
 
 func main() {
@@ -18,6 +19,7 @@ func main() {
 	go Database.Run(settings)
 	go Proxy.Run(settings)
 	go Collector.Run(settings)
+	go Timekeeper.Run(settings)
 
 	for {
 		time.Sleep(10 * time.Second)	

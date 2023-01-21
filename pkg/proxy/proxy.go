@@ -39,7 +39,7 @@ func Run(config Config.Settings) {
 }
 
 func CreateNewProxyTask(taskData Data.RawData) {
-	//log.Println("new proxy task:", taskData.TagID)
+	//log.Println("new proxy task:", taskData.TagId)
 	ProxyTask <- taskData
 }
 
@@ -90,7 +90,7 @@ func proxyWorkerRun(workerId int, config Config.Settings) {
 			//в случае если есть задание в канале ProxyTask
 		case currentProxyTask := <- ProxyTask :
 			//fmt.Println("proxyWorker", workerId, "processing new job...")
-			_, networkSendingError := fmt.Fprintf(connection, "%s, %d, %d, %s\n", currentProxyTask.TagID, currentProxyTask.DiscoveryUnixTime, currentProxyTask.Antenna, currentProxyTask.ReaderIP)
+			_, networkSendingError := fmt.Fprintf(connection, "%s, %d, %d, %s\n", currentProxyTask.TagId, currentProxyTask.DiscoveryUnixTime, currentProxyTask.Antenna, currentProxyTask.ReaderIP)
 			if err != nil {
 				//в случае потери связи во время отправки мы возвращаем задачу обратно в канал ProxyTask
 				ProxyTask <- currentProxyTask

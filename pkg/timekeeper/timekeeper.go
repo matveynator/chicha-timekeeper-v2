@@ -2,30 +2,21 @@ package Timekeeper
 
 import (
 	"log"
-	"runtime"
 
 	"chicha/pkg/data"
+	"chicha/pkg/config"
 )
 
-// To send a task: 
-//
-// import (
-// "chicha/pkg/timekeeper"
-// "chicha/pkg/data"
-// )
-//
-// Timekeeper.TimekeeperTask <- Data.RawData
 
-var timekeeperWorkersMaxCount int
+
+//оставляем только один процесс который будет калькулировать время
+var timekeeperWorkersMaxCount int = 1
 var TimekeeperTask chan Data.RawData
 var respawnLock chan int
 
-func init() {
+func Run(config Config.Settings) {
 
-	//set max workers equal to number of CPU cores:
-	timekeeperWorkersMaxCount = runtime.NumCPU()
-
-	//initialise channel with tasks:
+	//initialize channel with tasks:
 	TimekeeperTask = make(chan Data.RawData)
 
 	//initialize unblocking channel to guard respawn tasks
@@ -34,19 +25,33 @@ func init() {
 	go func() {
 		for {
 			// will block if there is timekeeperWorkersMaxCount ints in respawnLock
-			respawnLock <- 1 
-			go timekeeperWorkerRun(len(respawnLock))
+			respawnLock <- 1
+			//sleep 1 second
+			//time.Sleep(1 * time.Second)
+			go timekeeperWorkerRun(config)
 		}
 	}()
 }
 
-func timekeeperWorkerRun(workerId int) {
+
+
+func timekeeperWorkerRun(config Config.Settings) (err error) {
+	var currentLaps []Data.Lap
+
 	for {
 		select {
 			//в случае если есть задание в канале TimekeeperTask
 		case currentTimekeeperTask := <- TimekeeperTask :
-			log.Printf("timekeeperWorker %d received a new job %s\n", workerId, currentTimekeeperTask.TagID)
+			previousLaps := currentLaps
+			currentLaps, err = calculateRaceInMemory(currentTimekeeperTask, previousLaps, config)
+			if err != nil {
+				log.Println(err)
+				return
+			}	else {
+				log.Println("laps capacity =", cap(currentLaps))
+			}
 		}
 	}
 }
+
 

@@ -103,16 +103,16 @@ func connectToDb(config Config.Settings)(db *sql.DB, err error) {
 
 func createTables(db *sql.DB, config Config.Settings) (err error) {
 
-	_, err = db.Exec("CREATE TABLE if not exists DBWatchDog(ID INT PRIMARY KEY, UnixTime INT)")
+	_, err = db.Exec("CREATE TABLE if not exists DBWatchDog(Id INT PRIMARY KEY, UnixTime INT)")
 	if err != nil {
 		return
 	} else {
-		//populate DBWatchDog with data (one row with only one ID=1)
+		//populate DBWatchDog with data (one row with only one Id=1)
 		var id int64
 		// Create a sql/database DB instance
-		err = db.QueryRow("SELECT ID FROM DBWatchDog").Scan(&id)
+		err = db.QueryRow("SELECT Id FROM DBWatchDog").Scan(&id)
 		if err != nil  {
-			_, err = db.Exec("INSERT INTO DBWatchDog (ID,UnixTime) VALUES (?,?)", 1, time.Now().UnixMilli())
+			_, err = db.Exec("INSERT INTO DBWatchDog (Id,UnixTime) VALUES (?,?)", 1, time.Now().UnixMilli())
 			if err != nil {
 				return
 			} else {
@@ -121,12 +121,12 @@ func createTables(db *sql.DB, config Config.Settings) (err error) {
 		}
 	}
 
-	_, err = db.Exec("CREATE TABLE if not exists Lap(ID INT PRIMARY KEY, SportsmanID INT DEFAULT 0, TagID TEXT, DiscoveryMinimalUnixTime INT DEFAULT 0, DiscoveryAverageUnixTime INT DEFAULT 0, UpdatedAt INT DEFAULT 0, RaceID INT DEFAULT 0, PracticeID INT DEFAULT 0, RacePosition INT DEFAULT 0, TimeBehindTheLeader INT DEFAULT 0, LapNumber INT DEFAULT 0, LapTime INT DEFAULT 0, LapPosition INT DEFAULT 0, LapIsCurrent BOOL DEFAULT FALSE, LapIsStrange BOOL DEFAULT FALSE, RaceFinished BOOL DEFAULT FALSE, BestLapTime INT DEFAULT 0, BestLapNumber INT DEFAULT 0, BestLapPosition INT DEFAULT 0, RaceTotalTime INT DEFAULT 0, BetterOrWorseLapTime INT DEFAULT 0, UNIQUE(ID))")
+	_, err = db.Exec("CREATE TABLE if not exists Lap(Id INT PRIMARY KEY, SportsmanId INT DEFAULT 0, TagId TEXT, DiscoveryMinimalUnixTime INT DEFAULT 0, DiscoveryAverageUnixTime INT DEFAULT 0, UpdatedAt INT DEFAULT 0, RaceId INT DEFAULT 0, PracticeId INT DEFAULT 0, RacePosition INT DEFAULT 0, TimeBehindTheLeader INT DEFAULT 0, LapNumber INT DEFAULT 0, LapTime INT DEFAULT 0, LapPosition INT DEFAULT 0, LapIsCurrent BOOL DEFAULT FALSE, LapIsStrange BOOL DEFAULT FALSE, RaceFinished BOOL DEFAULT FALSE, BestLapTime INT DEFAULT 0, BestLapNumber INT DEFAULT 0, BestLapPosition INT DEFAULT 0, RaceTotalTime INT DEFAULT 0, BetterOrWorseLapTime INT DEFAULT 0, UNIQUE(Id))")
 	if err != nil {
 		return
 	}
 
-	_, err = db.Exec("CREATE TABLE if not exists RawData(ID INT NOT NULL, TagID TEXT, DiscoveryUnixTime INT,  ReaderIP TEXT, Antenna INT, ProxyIP TEXT, PRIMARY KEY(ID))")
+	_, err = db.Exec("CREATE TABLE if not exists RawData(Id INT NOT NULL, TagId TEXT, DiscoveryUnixTime INT,  ReaderIP TEXT, Antenna INT, ProxyIP TEXT, PRIMARY KEY(Id))")
 	if err != nil {
 		return
 	}
@@ -136,13 +136,13 @@ func createTables(db *sql.DB, config Config.Settings) (err error) {
 
 
 func InsertRawDataInDB (databaseConnection *sql.DB, rawData Data.RawData) (id int64, err error) {
-	err = databaseConnection.QueryRow("SELECT ID FROM RawData order by ID desc limit 1").Scan(&id)
+	err = databaseConnection.QueryRow("SELECT Id FROM RawData order by Id desc limit 1").Scan(&id)
 	if err != nil {
 		id=1
 	} else {
 		id++
 	}
 
-	_, err = databaseConnection.Exec("INSERT INTO RawData(ID,TagID,DiscoveryUnixTime,ReaderIP,Antenna,ProxyIP) VALUES (?, ?, ?, ?, ?, ?)", id, rawData.TagID, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
+	_, err = databaseConnection.Exec("INSERT INTO RawData(Id,TagId,DiscoveryUnixTime,ReaderIP,Antenna,ProxyIP) VALUES (?, ?, ?, ?, ?, ?)", id, rawData.TagId, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
 	return
 }
