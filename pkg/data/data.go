@@ -4,14 +4,14 @@ type RawData  struct {
 	TagId                       string
 	DiscoveryUnixTime           int64 
 	ReaderIP                    string
-	Antenna                     uint8
+	Antenna                     uint
 	ProxyIP											string
 }
 
 type RawXMLData  struct {
 	TagId                       string
 	DiscoveryTime           		string
-	Antenna                     uint8
+	Antenna                     uint
 	ReaderIP										string
 }
 
@@ -22,18 +22,18 @@ type Lap struct {
 	TagId                       string
 	DiscoveryMinimalUnixTime    int64
 	DiscoveryAverageUnixTime    int64
-	AverageResultsCount					int
+	AverageResultsCount					uint
 	RaceId                      uint
 	RacePosition                uint
 	TimeBehindTheLeader         int64
-	LapNumber                   int
+	LapNumber                   uint
 	LapTime                     int64
 	LapPosition                 uint
 	LapIsCurrent                bool
 	LapIsStrange                bool
 	RaceFinished                bool
 	BestLapTime                 int64
-	BestLapNumber               int
+	BestLapNumber               uint
 	RaceTotalTime               int64
 	BetterOrWorseLapTime        int64
 }

@@ -14,7 +14,7 @@ type Settings struct {
 	APP_NAME, VERSION, COLLECTOR_LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS_HASH, WEB_LISTENER_ADDRESS, PROXY_ADDRESS, DB_TYPE, DB_FILE_PATH, DB_FULL_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE string
 	PG_PORT int
 	AVERAGE_RESULTS bool
-	RACE_TIMEOUT_DURATION, MINIMAL_LAP_TIME_DURATION time.Duration
+	RACE_TIMEOUT_DURATION, MINIMAL_LAP_TIME_DURATION, AVERAGE_DURATION time.Duration
 }
 
 func isFlagPassed(name string) bool {
@@ -42,6 +42,7 @@ func ParseFlags() (config Settings)  {
 	flag.StringVar(&config.TIME_ZONE, "timezone", "UTC", "Set race timezone. Example: Europe/Paris, Africa/Dakar, UTC, https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
 	flag.DurationVar(&config.RACE_TIMEOUT_DURATION, "timeout", 2*time.Minute, "Set race timeout duration. After this time if nobody passes the finish line the race will be stopped. Valid time units are: 's' (second), 'm' (minute), 'h' (hour).")
 	flag.DurationVar(&config.MINIMAL_LAP_TIME_DURATION, "laptime", 45*time.Second, "Minimal lap time duration. Results smaller than this duration would be considered wrong." )
+	  flag.DurationVar(&config.AVERAGE_DURATION, "average-duration", 1000*time.Millisecond, "Duration to calculate average results. Results passed to reader during this duration will be calculated as average result." )
 	flag.BoolVar(&config.AVERAGE_RESULTS, "average", true, "Calculate average results instead of only first results.")
 
 	//db

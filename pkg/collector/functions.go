@@ -44,7 +44,7 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 						return
 					} else {
 						rawData.TagId = string(strings.TrimSpace(csvField[0]))
-						rawData.Antenna = uint8(antennaPosition)
+						rawData.Antenna = uint(antennaPosition)
 
 						if numberOfCSVColumns == 3 {
 							//reader connection without proxy
@@ -103,7 +103,7 @@ func parseXMLPacket(data []byte, remoteIPAddress string, config Config.Settings)
 		}
 		rawData.DiscoveryUnixTime = discoveryTime.UnixNano()/int64(time.Millisecond)
 		rawData.TagId = strings.ReplaceAll(rawXMLData.TagId, " ", "")
-		rawData.Antenna = uint8(rawXMLData.Antenna)
+		rawData.Antenna = uint(rawXMLData.Antenna)
 
 		if net.ParseIP(rawXMLData.ReaderIP) != nil {
 			//connection received from proxy (not from reader).
