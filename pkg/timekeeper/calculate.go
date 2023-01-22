@@ -58,7 +58,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 		//get current lap number
 		var currentLapNumber uint
-		currentLapNumber, err = getCurrentLapNumber(currentTimekeeperTask, previousLaps, config)
+		currentLapNumber, err = getMyCurrentRaceLapNumber(currentTimekeeperTask, previousLaps, config)
 		if err != nil {
 			log.Println(err)
 			return

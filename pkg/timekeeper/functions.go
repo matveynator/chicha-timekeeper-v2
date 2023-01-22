@@ -49,24 +49,34 @@ func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.La
 	return
 }
 
-func getCurrentLapNumber(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (lapNumber uint, err error) {
+func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (lapNumber uint, err error) {
+
+	//get current RaceId
+	var currentRaceId uint
+	currentRaceId, err = getCurrentRaceId(currentTimekeeperTask, previousLaps, config)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	//if previousLaps slice is empty - my current race lap number = 0:
 	if cap(previousLaps) == 0 {
 		lapNumber = 0
 	} else {
-
-		//get only my results from slice:
 		var myPreviousLaps []Data.Lap 
 		for _, previousLap := range previousLaps {
-			if previousLap.TagId == currentTimekeeperTask.TagId {
+			//gather together only my laps (by my TagId) and only from current race:
+			if previousLap.TagId == currentTimekeeperTask.TagId && previousLap.RaceId == currentRaceId {
 				myPreviousLaps = append(myPreviousLaps, previousLap)
 			}
 		}
-		//if my results available:
-		if cap(myPreviousLaps)==0 {
+		//if my results empty:
+		if cap(myPreviousLaps) == 0 {
 			log.Println("cap(myPreviousLaps):", cap(myPreviousLaps))
 			lapNumber = 0
 		} else {
-		  log.Println("cap(myPreviousLaps):", cap(myPreviousLaps))
+			//if my results are not empty:
+			log.Println("cap(myPreviousLaps):", cap(myPreviousLaps))
 			sort.Slice(myPreviousLaps, func(i, j int) bool {
 				//sort descending by DiscoveryAverageUnixTime or DiscoveryMinimalUnixTime (depending on config.AVERAGE_RESULTS setting:
 				if config.AVERAGE_RESULTS {
@@ -80,17 +90,18 @@ func getCurrentLapNumber(currentTimekeeperTask Data.RawData, previousLaps []Data
 			location, err = time.LoadLocation(config.TIME_ZONE)
 			if err != nil {
 				//stop and return error
+				log.Println("Error: time.LoadLocation(config.TIME_ZONE) -", err)
 				return
 			} else {
-				var lastLapTime time.Time
+				var myLastLapTime time.Time
 				if config.AVERAGE_RESULTS {
-					lastLapTime = time.UnixMilli(myPreviousLaps[0].DiscoveryAverageUnixTime).In(location)
+					myLastLapTime = time.UnixMilli(myPreviousLaps[0].DiscoveryAverageUnixTime).In(location)
 				} else {
-					lastLapTime = time.UnixMilli(myPreviousLaps[0].DiscoveryMinimalUnixTime).In(location)
+					myLastLapTime = time.UnixMilli(myPreviousLaps[0].DiscoveryMinimalUnixTime).In(location)
 				}
-				currentTime := time.UnixMilli(currentTimekeeperTask.DiscoveryUnixTime).In(location)
+				myCurrentLapTime := time.UnixMilli(currentTimekeeperTask.DiscoveryUnixTime).In(location)
 
-				if currentTime.After(lastLapTime.Add(config.MINIMAL_LAP_TIME_DURATION)) {
+				if myCurrentLapTime.After(myLastLapTime.Add(config.MINIMAL_LAP_TIME_DURATION)) {
 					lapNumber = myPreviousLaps[0].LapNumber + 1
 				} else {
 					lapNumber = myPreviousLaps[0].LapNumber
