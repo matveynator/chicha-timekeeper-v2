@@ -36,19 +36,18 @@ func Run(config Config.Settings) {
 
 
 func timekeeperWorkerRun(config Config.Settings) (err error) {
-	var currentLaps []Data.Lap
+	var CurrentLaps []Data.Lap
 
 	for {
 		select {
 			//в случае если есть задание в канале TimekeeperTask
 		case currentTimekeeperTask := <- TimekeeperTask :
-			previousLaps := currentLaps
-			currentLaps, err = calculateRaceInMemory(currentTimekeeperTask, previousLaps, config)
+			CurrentLaps, err = calculateRaceInMemory(currentTimekeeperTask, CurrentLaps, config)
 			if err != nil {
 				log.Println(err)
 				return
 			}	else {
-				log.Println("laps capacity =", cap(currentLaps))
+				log.Println("laps capacity =", len(CurrentLaps))
 			}
 		}
 	}

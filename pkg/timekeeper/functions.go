@@ -9,7 +9,7 @@ import (
 )
 
 func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (raceId uint, err error) {
-	if cap(previousLaps) == 0 {
+	if len(previousLaps) == 0 {
 		raceId = 1
 	} else {
 		previousLapsCopy := previousLaps
@@ -51,6 +51,8 @@ func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.La
 
 func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (lapNumber uint, err error) {
 
+	var myPreviousLaps []Data.Lap
+
 	//get current RaceId
 	var currentRaceId uint
 	currentRaceId, err = getCurrentRaceId(currentTimekeeperTask, previousLaps, config)
@@ -60,23 +62,27 @@ func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps 
 	}
 
 	//if previousLaps slice is empty - my current race lap number = 0:
-	if cap(previousLaps) == 0 {
+	if len(previousLaps) == 0 {
+		log.Println("len(previousLaps) == 0 (1)")
 		lapNumber = 0
 	} else {
-		var myPreviousLaps []Data.Lap 
 		for _, previousLap := range previousLaps {
 			//gather together only my laps (by my TagId) and only from current race:
-			if previousLap.TagId == currentTimekeeperTask.TagId && previousLap.RaceId == currentRaceId {
-				myPreviousLaps = append(myPreviousLaps, previousLap)
+			if previousLap.TagId == currentTimekeeperTask.TagId {
+				if previousLap.RaceId == currentRaceId {
+					myPreviousLaps = append(myPreviousLaps, previousLap)
+				}
 			}
 		}
+		log.Println("len(myPreviousLaps)", len(myPreviousLaps))
 		//if my results empty:
-		if cap(myPreviousLaps) == 0 {
-			log.Println("cap(myPreviousLaps):", cap(myPreviousLaps))
+		if len(myPreviousLaps) == 0 {
+			log.Println("len(myPreviousLaps) == 0 (2)")
 			lapNumber = 0
 		} else {
 			//if my results are not empty:
-			log.Println("cap(myPreviousLaps):", cap(myPreviousLaps))
+			log.Println("len(myPreviousLaps): ", len(myPreviousLaps))
+
 			sort.Slice(myPreviousLaps, func(i, j int) bool {
 				//sort descending by DiscoveryAverageUnixTime or DiscoveryMinimalUnixTime (depending on config.AVERAGE_RESULTS setting:
 				if config.AVERAGE_RESULTS {
@@ -86,6 +92,7 @@ func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps 
 				}
 			})
 
+			log.Println("myPreviousLaps[0].LapNumber = ", myPreviousLaps[0].LapNumber) 
 			var location *time.Location
 			location, err = time.LoadLocation(config.TIME_ZONE)
 			if err != nil {
