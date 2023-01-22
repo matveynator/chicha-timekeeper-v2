@@ -109,7 +109,7 @@ else
 
 		done
 
-		[ "${lap}" != "${laps}" ] && echo ""; echo ""; read -p  "Next lap in ${minimal_lap_time_sec} seconds..." -t ${minimal_lap_time_sec}
+		[ "${lap}" != "${laps}" ] && echo ""; echo ""; read -p  "Next lap #$(($lap+1)) in ${minimal_lap_time_sec} seconds..." -t ${minimal_lap_time_sec}
 
 	done
 	echo ""
