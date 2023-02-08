@@ -1,3 +1,7 @@
+<p align="left">
+    <img property="og:image" src="https://repository-images.githubusercontent.com/577755312/57f67b11-437b-448f-b53e-cf47165612c2" width="25%">
+</p>
+
 # Chicha - the competition timekeeper (chronograph). Version 2.0
 
 Free chronograf for runners, bycicles, motorcycles, carts, cars, trucks, atv and other types of race competitions. 
@@ -6,6 +10,7 @@ UHF-RFID compatible.
 <p align="left">
     <img property="og:image" src="https://repository-images.githubusercontent.com/368199185/e26c553e-b23e-4bae-b4d2-c2df502e9f04" width="75%">
 </p>
+
 
 ## [Demo: http://chicha.zabiyaka.net](http://chicha.zabiyaka.net/)
 
