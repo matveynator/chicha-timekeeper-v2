@@ -2,10 +2,75 @@ package Timekeeper
 
 import (
 	"log"
+	"fmt"
 	"sort"
 	"chicha/pkg/data"
 	"chicha/pkg/config"
 )
+
+// Sort slice by discovery average unix time descending (big -> small):
+func sortLapsDescByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		log.Println("Average: sorting laps by DiscoveryAverageUnixTime")
+		return lapsToSort[i].DiscoveryAverageUnixTime > lapsToSort[j].DiscoveryAverageUnixTime
+	})
+}
+
+// Sort slice by discovery minimal unix time descending (big -> small):
+func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		log.Println("Minimal: sorting laps by DiscoveryMinimalUnixTime")
+		return lapsToSort[i].DiscoveryMinimalUnixTime > lapsToSort[j].DiscoveryMinimalUnixTime
+	})
+}
+
+
+// Remove duplicates in laps data:
+func removeLapDuplicates(elements []Data.Lap) []Data.Lap {
+	encountered := map[string]bool{}
+	result := []Data.Lap{}
+
+	for _, v := range elements {
+		key := fmt.Sprintf("%v:%v:%v", v.TagId, v.RaceId, v.LapNumber)
+		if encountered[key] == true {
+			// Do not add duplicate element.
+		} else {
+			// Record this element as encountered.
+			encountered[key] = true
+
+			// Find the minimum DiscoveryMinimalUnixTime.
+			minDiscoveryMinimalUnixTime := v.DiscoveryMinimalUnixTime
+			for _, w := range elements {
+				if w.TagId == v.TagId && w.RaceId == v.RaceId && w.LapNumber == v.LapNumber {
+					if w.DiscoveryMinimalUnixTime < minDiscoveryMinimalUnixTime {
+						minDiscoveryMinimalUnixTime = w.DiscoveryMinimalUnixTime
+					}
+				}
+			}
+			v.DiscoveryMinimalUnixTime = minDiscoveryMinimalUnixTime
+
+			// Calculate the average DiscoveryAverageUnixTime.
+			var totalDiscoveryAverageUnixTime int64
+			encounteredDiscoveryAverageUnixTimes := map[int64]bool{}
+			for _, w := range elements {
+				if w.TagId == v.TagId && w.RaceId == v.RaceId && w.LapNumber == v.LapNumber {
+					totalDiscoveryAverageUnixTime += w.DiscoveryAverageUnixTime
+					encounteredDiscoveryAverageUnixTimes[w.DiscoveryAverageUnixTime] = true
+				}
+			}
+			v.DiscoveryAverageUnixTime = totalDiscoveryAverageUnixTime / int64(len(encounteredDiscoveryAverageUnixTimes))
+			v.AverageResultsCount = uint(len(encounteredDiscoveryAverageUnixTimes))
+
+			// Append to result slice.
+			result = append(result, v)
+		}
+	}
+
+	// Return the new slice with unique elements.
+	return result
+}
+
+
 
 func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (currentLaps []Data.Lap, err error) {
 
@@ -30,17 +95,22 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		currentLap.RaceFinished = false
 		currentLap.RaceTotalTime = 0
 	} else {
-		//non empty slice (race allready running)
-		//sort slice by discovery unix time descending (big -> small):
-		sort.Slice(previousLaps, func(i, j int) bool {
-			if config.AVERAGE_RESULTS {
-				log.Println("doing.. config.AVERAGE_RESULTS true")
-				return previousLaps[i].DiscoveryAverageUnixTime > previousLaps[j].DiscoveryAverageUnixTime
-			} else {
-				log.Println("doing.. config.AVERAGE_RESULTS false")
-				return previousLaps[i].DiscoveryMinimalUnixTime > previousLaps[j].DiscoveryMinimalUnixTime
-			}
-		})
+		// Not an empty slice (race allready running)
+
+		//remove duplicates
+		previousLaps = removeLapDuplicates(previousLaps)
+
+		// Sort laps by discovery unix time descending (big -> small):
+		if config.AVERAGE_RESULTS {
+			sortLapsDescByDiscoveryAverageUnixTime(previousLaps)
+		} else {
+			sortLapsDescByDiscoveryMinimalUnixTime(previousLaps)
+		}
+
+		for _, previousLap := range previousLaps {
+			fmt.Printf("TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d \n", previousLap.TagId, previousLap.DiscoveryMinimalUnixTime, previousLap.AverageResultsCount, previousLap.RaceId, previousLap.LapNumber)
+
+		}
 
 		//get current race Id
 		var currentRaceId uint

@@ -66,7 +66,7 @@ func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps 
 
 	// If previousLaps slice is empty, current lap number is 0:
 	if len(previousLaps) == 0 {
-		log.Println("len(previousLaps) == 0 (1)")
+		//log.Println("len(previousLaps) == 0 (1)")
 		lapNumber = 0
 	} else {
 		for _, previousLap := range previousLaps {
@@ -77,15 +77,14 @@ func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps 
 				}
 			}
 		}
-		log.Println("len(myPreviousLaps)", len(myPreviousLaps))
+		//log.Println("len(myPreviousLaps)", len(myPreviousLaps))
 		//if my results empty:
 		if len(myPreviousLaps) == 0 {
-			log.Println("len(myPreviousLaps) == 0 (2)")
+			//log.Println("len(myPreviousLaps) == 0 (2)")
 			lapNumber = 0
 		} else {
 			//if my results are not empty:
-			log.Println("len(myPreviousLaps): ", len(myPreviousLaps))
-
+			//log.Println("len(myPreviousLaps): ", len(myPreviousLaps))
 			sort.Slice(myPreviousLaps, func(i, j int) bool {
 				//sort descending by DiscoveryAverageUnixTime or DiscoveryMinimalUnixTime (depending on config.AVERAGE_RESULTS setting:
 				if config.AVERAGE_RESULTS {
