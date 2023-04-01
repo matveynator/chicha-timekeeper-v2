@@ -8,11 +8,13 @@ import (
 	"chicha/pkg/data"
 )
 
+// getCurrentRaceId returns the race ID of the current lap based on previous laps.
+// If there are no previous laps, the race ID will be set to 1.
 func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (raceId uint, err error) {
 	if len(previousLaps) == 0 {
-		raceId = 1
+		raceId = 1 // If there are no previous laps, assign race ID 1.
 	} else {
-		previousLapsCopy := previousLaps
+		previousLapsCopy := previousLaps // Create a copy of the previous laps to avoid altering the original slice.
 		sort.Slice(previousLapsCopy, func(i, j int) bool {
 			//sort descending by DiscoveryAverageUnixTime or DiscoveryMinimalUnixTime (depending on config.AVERAGE_RESULTS setting:
 			if config.AVERAGE_RESULTS {
@@ -37,11 +39,11 @@ func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.La
 			currentTime := time.UnixMilli(currentTimekeeperTask.DiscoveryUnixTime).In(location)
 
 			if currentTime.After(lastLapTime.Add(config.RACE_TIMEOUT_DURATION)) {
-				//if previous race time expired (time outed) - increment race id:
+				// If previous race time expired (timed out), increment race ID:
 				log.Println("race expired, starting new race.")
 				raceId = previousLaps[0].RaceId + 1	
 			} else {
-				//return current race id:
+				// Return current race ID:
 				raceId = previousLaps[0].RaceId
 			}
 		}
@@ -49,11 +51,12 @@ func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.La
 	return
 }
 
+// getMyCurrentRaceLapNumber returns the current lap number of the current racer based on previous laps and current timekeeper task.
 func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (lapNumber uint, err error) {
 
 	var myPreviousLaps []Data.Lap
 
-	//get current RaceId
+	// Get current Race ID:
 	var currentRaceId uint
 	currentRaceId, err = getCurrentRaceId(currentTimekeeperTask, previousLaps, config)
 	if err != nil {
@@ -61,13 +64,13 @@ func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps 
 		return
 	}
 
-	//if previousLaps slice is empty - my current race lap number = 0:
+	// If previousLaps slice is empty, current lap number is 0:
 	if len(previousLaps) == 0 {
 		log.Println("len(previousLaps) == 0 (1)")
 		lapNumber = 0
 	} else {
 		for _, previousLap := range previousLaps {
-			//gather together only my laps (by my TagId) and only from current race:
+			// Gather together only my laps (by my TagId) and only from current race:
 			if previousLap.TagId == currentTimekeeperTask.TagId {
 				if previousLap.RaceId == currentRaceId {
 					myPreviousLaps = append(myPreviousLaps, previousLap)
