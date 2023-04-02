@@ -24,6 +24,23 @@ func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
 	})
 }
 
+// Find minimal discovery unix time for each laps with same TagId, RaceId, LapNumber:
+func setMinimalDiscoveryUnixTime(laps []Data.Lap) []Data.Lap {
+
+	otherLaps := laps
+	for _, lap := range laps {
+		for _, otherLap := range otherLaps {
+			if lap.TagId == otherLap.TagId && lap.RaceId == otherLap.RaceId && lap.LapNumber == otherLap.LapNumber {
+				if lap.DiscoveryMinimalUnixTime > otherLap.DiscoveryMinimalUnixTime {
+					// Replace DiscoveryMinimalUnixTime with smaller value:
+					lap.DiscoveryMinimalUnixTime = otherLap.DiscoveryMinimalUnixTime
+				}
+			}
+		}
+	}
+
+	return laps
+}
 
 // Remove duplicates in laps data:
 func removeLapDuplicates(elements []Data.Lap) []Data.Lap {
@@ -145,6 +162,10 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	}
 	// Add currentLap to previousLaps slice:
 	currentLaps = append(previousLaps, currentLap)
+
+
+	// Find minimal discovery unix time for each laps with same TagId, RaceId, LapNumber:
+	currentLaps = setMinimalDiscoveryUnixTime(currentLaps)
 
 	// Remove duplicates
 	currentLaps = removeLapDuplicates(currentLaps)
