@@ -19,7 +19,6 @@ UHF-RFID compatible.
 ```
 chicha -h
 Usage of chicha:
-
   -average
     	Calculate average results instead of only first results. (default true)
   -average-duration duration
@@ -47,7 +46,7 @@ Usage of chicha:
   -pg-user string
     	PostgreSQL DB user. (default "postgres")
   -proxy string
-    	Proxy received data to another collector. For example: -proxy '10.9.8.7:4000'.
+    	Proxy incoming data to another chicha collector. For example: -proxy '10.9.8.7:4000'.
   -timeout duration
     	Set race timeout duration. After this time if nobody passes the finish line the race will be stopped. Valid time units are: 's' (second), 'm' (minute), 'h' (hour). (default 2m0s)
   -timezone string
