@@ -19,27 +19,32 @@ UHF-RFID compatible.
 ```
 chicha -h
 Usage of chicha:
+
   -average
     	Calculate average results instead of only first results. (default true)
+  -average-duration duration
+    	Duration to calculate average results. Results passed to reader during this duration will be calculated as average result. (default 1s)
   -collector string
     	Provide IP address and port to collect and parse data from RFID and timing readers. (default "0.0.0.0:4000")
-  -dbpath string
+  -db-path string
     	Provide path to writable directory to store database data. (default ".")
-  -dbtype string
-    	Select db type: sqlite / genji / postgres (default "sqlite")
-  -laptime duration
+  -db-save-interval duration
+    	Duration to save data from memory to database (disk). Setting duration too low may cause unpredictable performance results. (default 30s)
+  -db-type string
+    	Select db type: sqlite / genji / postgres (default "genji")
+  -lap-time duration
     	Minimal lap time duration. Results smaller than this duration would be considered wrong. (default 45s)
-  -pgdbname string
+  -pg-db-name string
     	PostgreSQL DB name. (default "chicha")
-  -pghost string
+  -pg-host string
     	PostgreSQL DB host. (default "127.0.0.1")
-  -pgpass string
+  -pg-pass string
     	PostgreSQL DB password.
-  -pgport int
+  -pg-port int
     	PostgreSQL DB port. (default 5432)
-  -pgssl string
+  -pg-ssl string
     	disable / allow / prefer / require / verify-ca / verify-full - PostgreSQL ssl modes: https://www.postgresql.org/docs/current/libpq-ssl.html (default "prefer")
-  -pguser string
+  -pg-user string
     	PostgreSQL DB user. (default "postgres")
   -proxy string
     	Proxy received data to another collector. For example: -proxy '10.9.8.7:4000'.
