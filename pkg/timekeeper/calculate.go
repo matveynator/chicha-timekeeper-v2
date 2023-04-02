@@ -25,11 +25,10 @@ func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
 }
 
 // Find and set minimal discovery unix time for each laps with same TagId, RaceId, LapNumber:
-func calculateMinimalTime(laps []Data.Lap) []Data.Lap {
+func calculateMinimalTime(laps []Data.Lap) (minimalLaps []Data.Lap) {
 
-	otherLaps := laps
 	for _, lap := range laps {
-		for _, otherLap := range otherLaps {
+		for _, otherLap := range laps {
 			if lap.TagId == otherLap.TagId && lap.RaceId == otherLap.RaceId && lap.LapNumber == otherLap.LapNumber {
 				if lap.DiscoveryMinimalUnixTime > otherLap.DiscoveryMinimalUnixTime {
 					// Replace DiscoveryMinimalUnixTime with smaller value:
@@ -37,31 +36,32 @@ func calculateMinimalTime(laps []Data.Lap) []Data.Lap {
 				}
 			}
 		}
+		minimalLaps = append(minimalLaps, lap)
 	}
 
-	return laps
+	return minimalLaps
 }
 
 
 // Calculate DiscoveryAverageUnixTime and AverageResultsCount time for each laps with same TagId, RaceId, LapNumber:
-func calculateAverageTimeAndResultsCount(laps []Data.Lap) []Data.Lap {
+func calculateAverageTimeAndResultsCount(laps []Data.Lap) (averageLaps []Data.Lap) {
 
 	// Create slice copy:
-	otherLaps := laps
-	for lapIndex, lap := range laps {
-		for otherLapIndex, otherLap := range otherLaps {
+	for _, lap := range laps {
+		// Set initial AverageResultsCount equals zero
+		lap.AverageResultsCount = 0
+		for _, otherLap := range laps {
 			if lap.TagId == otherLap.TagId && lap.RaceId == otherLap.RaceId && lap.LapNumber == otherLap.LapNumber {
 				// Calculate DiscoveryAverageUnixTime and AverageResultsCount:	
-				if lapIndex != otherLapIndex {
-					lap.DiscoveryAverageUnixTime = (lap.DiscoveryAverageUnixTime + otherLap.DiscoveryAverageUnixTime)/2
-					lap.AverageResultsCount = lap.AverageResultsCount + 1
-
-				}
+				lap.DiscoveryAverageUnixTime = (lap.DiscoveryAverageUnixTime + otherLap.DiscoveryAverageUnixTime)/2
+				lap.AverageResultsCount = lap.AverageResultsCount + 1
 			}
 		}
+		// Prepare slice to return:
+		averageLaps = append(averageLaps, lap)
 	}
 
-	return laps
+	return averageLaps
 }
 
 // Remove duplicates in laps data:
