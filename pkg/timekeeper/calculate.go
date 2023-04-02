@@ -11,7 +11,7 @@ import (
 // Sort slice by discovery average unix time descending (big -> small):
 func sortLapsDescByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
-		log.Println("Average: sorting laps by DiscoveryAverageUnixTime")
+		//log.Println("Average: sorting laps by DiscoveryAverageUnixTime")
 		return lapsToSort[i].DiscoveryAverageUnixTime > lapsToSort[j].DiscoveryAverageUnixTime
 	})
 }
@@ -19,13 +19,13 @@ func sortLapsDescByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
 // Sort slice by discovery minimal unix time descending (big -> small):
 func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
-		log.Println("Minimal: sorting laps by DiscoveryMinimalUnixTime")
+		//log.Println("Minimal: sorting laps by DiscoveryMinimalUnixTime")
 		return lapsToSort[i].DiscoveryMinimalUnixTime > lapsToSort[j].DiscoveryMinimalUnixTime
 	})
 }
 
-// Find minimal discovery unix time for each laps with same TagId, RaceId, LapNumber:
-func setMinimalDiscoveryUnixTime(laps []Data.Lap) []Data.Lap {
+// Find and set minimal discovery unix time for each laps with same TagId, RaceId, LapNumber:
+func calculateMinimalTime(laps []Data.Lap) []Data.Lap {
 
 	otherLaps := laps
 	for _, lap := range laps {
@@ -42,51 +42,44 @@ func setMinimalDiscoveryUnixTime(laps []Data.Lap) []Data.Lap {
 	return laps
 }
 
+
+// Calculate DiscoveryAverageUnixTime and AverageResultsCount time for each laps with same TagId, RaceId, LapNumber:
+func calculateAverageTimeAndResultsCount(laps []Data.Lap) []Data.Lap {
+
+	// Create slice copy:
+	otherLaps := laps
+	for lapIndex, lap := range laps {
+		for otherLapIndex, otherLap := range otherLaps {
+			if lap.TagId == otherLap.TagId && lap.RaceId == otherLap.RaceId && lap.LapNumber == otherLap.LapNumber {
+				// Calculate DiscoveryAverageUnixTime and AverageResultsCount:	
+				if lapIndex != otherLapIndex {
+					lap.DiscoveryAverageUnixTime = (lap.DiscoveryAverageUnixTime + otherLap.DiscoveryAverageUnixTime)/2
+					lap.AverageResultsCount = lap.AverageResultsCount + 1
+
+				}
+			}
+		}
+	}
+
+	return laps
+}
+
 // Remove duplicates in laps data:
-func removeLapDuplicates(elements []Data.Lap) []Data.Lap {
-	encountered := map[string]bool{}
-	result := []Data.Lap{}
+func removeDuplicates(laps []Data.Lap) (uniqLaps []Data.Lap) {
 
-	for _, v := range elements {
-		key := fmt.Sprintf("%v:%v:%v", v.TagId, v.RaceId, v.LapNumber)
-		if encountered[key] == true {
-			// Do not add duplicate element.
-		} else {
-			// Record this element as encountered.
-			encountered[key] = true
-
-			// Find the minimum DiscoveryMinimalUnixTime.
-			minDiscoveryMinimalUnixTime := v.DiscoveryMinimalUnixTime
-			for _, w := range elements {
-				if w.TagId == v.TagId && w.RaceId == v.RaceId && w.LapNumber == v.LapNumber {
-					if w.DiscoveryMinimalUnixTime < minDiscoveryMinimalUnixTime {
-						minDiscoveryMinimalUnixTime = w.DiscoveryMinimalUnixTime
-					}
+	for lapIndex, lap := range laps {
+		for otherLapIndex, otherLap := range laps {
+			if lap.TagId == otherLap.TagId && lap.RaceId == otherLap.RaceId && lap.LapNumber == otherLap.LapNumber && lap.DiscoveryAverageUnixTime == otherLap.DiscoveryAverageUnixTime && lap.DiscoveryMinimalUnixTime == otherLap.DiscoveryMinimalUnixTime {
+				if lapIndex == otherLapIndex {
+					// Append to uniq lap slice:
+					uniqLaps = append(uniqLaps, lap)
 				}
 			}
-			v.DiscoveryMinimalUnixTime = minDiscoveryMinimalUnixTime
-
-			// Calculate the average DiscoveryAverageUnixTime.
-			var totalDiscoveryAverageUnixTime int64
-			encounteredDiscoveryAverageUnixTimes := map[int64]bool{}
-			for _, w := range elements {
-				if w.TagId == v.TagId && w.RaceId == v.RaceId && w.LapNumber == v.LapNumber {
-					totalDiscoveryAverageUnixTime += w.DiscoveryAverageUnixTime
-					encounteredDiscoveryAverageUnixTimes[w.DiscoveryAverageUnixTime] = true
-				}
-			}
-			fmt.Println("totalDiscoveryAverageUnixTime=",totalDiscoveryAverageUnixTime)
-			fmt.Println("len(encounteredDiscoveryAverageUnixTimes)=", len(encounteredDiscoveryAverageUnixTimes))
-			v.DiscoveryAverageUnixTime = totalDiscoveryAverageUnixTime / int64(len(encounteredDiscoveryAverageUnixTimes))
-			v.AverageResultsCount = uint(len(encounteredDiscoveryAverageUnixTimes))
-
-			// Append to result slice.
-			result = append(result, v)
 		}
 	}
 
 	// Return the new slice with unique elements.
-	return result
+	return uniqLaps
 }
 
 
@@ -165,10 +158,13 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 
 	// Find minimal discovery unix time for each laps with same TagId, RaceId, LapNumber:
-	currentLaps = setMinimalDiscoveryUnixTime(currentLaps)
+	currentLaps = calculateMinimalTime(currentLaps)
+
+	// Calculate DiscoveryAverageUnixTime and AverageResultsCount time for each laps with same TagId, RaceId, LapNumber:
+	currentLaps = calculateAverageTimeAndResultsCount(currentLaps)
 
 	// Remove duplicates
-	currentLaps = removeLapDuplicates(currentLaps)
+	currentLaps = removeDuplicates(currentLaps)
 
 	// Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
 	if config.AVERAGE_RESULTS {
