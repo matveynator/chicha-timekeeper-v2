@@ -41,22 +41,22 @@ import (
 		flag.StringVar(&config.PROXY_ADDRESS, "proxy", "", "Proxy received data to another collector. For example: -proxy '10.9.8.7:4000'.")
 		flag.StringVar(&config.TIME_ZONE, "timezone", "UTC", "Set race timezone. Example: Europe/Paris, Africa/Dakar, UTC, https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
 		flag.DurationVar(&config.RACE_TIMEOUT_DURATION, "timeout", 2*time.Minute, "Set race timeout duration. After this time if nobody passes the finish line the race will be stopped. Valid time units are: 's' (second), 'm' (minute), 'h' (hour).")
-		flag.DurationVar(&config.MINIMAL_LAP_TIME_DURATION, "laptime", 45*time.Second, "Minimal lap time duration. Results smaller than this duration would be considered wrong." )
+		flag.DurationVar(&config.MINIMAL_LAP_TIME_DURATION, "lap-time", 45*time.Second, "Minimal lap time duration. Results smaller than this duration would be considered wrong." )
 		flag.DurationVar(&config.AVERAGE_DURATION, "average-duration", 1000*time.Millisecond, "Duration to calculate average results. Results passed to reader during this duration will be calculated as average result." )
 		flag.BoolVar(&config.AVERAGE_RESULTS, "average", true, "Calculate average results instead of only first results.")
 
 		//db
-		flag.StringVar(&config.DB_FILE_PATH, "dbpath", ".", "Provide path to writable directory to store database data.")
-		flag.StringVar(&config.DB_TYPE, "dbtype", "sqlite", "Select db type: sqlite / genji / postgres")
+		flag.StringVar(&config.DB_FILE_PATH, "db-path", ".", "Provide path to writable directory to store database data.")
+		flag.StringVar(&config.DB_TYPE, "db-type", "genji", "Select db type: sqlite / genji / postgres")
 		flag.DurationVar(&config.DB_SAVE_INTERVAL_DURATION, "db-save-interval", 30000*time.Millisecond, "Duration to save data from memory to database (disk). Setting duration too low may cause unpredictable performance results." )
 
 		//PostgreSQL related start
-		flag.StringVar(&config.PG_HOST, "pghost", "127.0.0.1", "PostgreSQL DB host.")
-		flag.IntVar(&config.PG_PORT, "pgport", 5432, "PostgreSQL DB port.")
-		flag.StringVar(&config.PG_USER, "pguser", "postgres", "PostgreSQL DB user.")
-		flag.StringVar(&config.PG_PASS, "pgpass", "", "PostgreSQL DB password.")
-		flag.StringVar(&config.PG_DB_NAME, "pgdbname", "chicha", "PostgreSQL DB name.")
-		flag.StringVar(&config.PG_SSL, "pgssl", "prefer", "disable / allow / prefer / require / verify-ca / verify-full - PostgreSQL ssl modes: https://www.postgresql.org/docs/current/libpq-ssl.html")
+		flag.StringVar(&config.PG_HOST, "pg-host", "127.0.0.1", "PostgreSQL DB host.")
+		flag.IntVar(&config.PG_PORT, "pg-port", 5432, "PostgreSQL DB port.")
+		flag.StringVar(&config.PG_USER, "pg-user", "postgres", "PostgreSQL DB user.")
+		flag.StringVar(&config.PG_PASS, "pg-pass", "", "PostgreSQL DB password.")
+		flag.StringVar(&config.PG_DB_NAME, "pg-db-name", "chicha", "PostgreSQL DB name.")
+		flag.StringVar(&config.PG_SSL, "pg-ssl", "prefer", "disable / allow / prefer / require / verify-ca / verify-full - PostgreSQL ssl modes: https://www.postgresql.org/docs/current/libpq-ssl.html")
 
 		/*
 		//escape test flags:

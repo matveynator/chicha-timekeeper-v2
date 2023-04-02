@@ -25,7 +25,7 @@ func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
 }
 
 // Calculate DiscoveryAverageUnixTime and AverageResultsCount time for each laps with same TagId, RaceId, LapNumber, find and set minimal discovery unix time for each laps with same TagId, RaceId, LapNumber, Remove duplicates in laps data:
-func calculateUpdatedLaps(lap Data.Lap, previousLaps []Data.Lap) (updatedLaps []Data.Lap) {
+func calculateMinimalAndAverageTime(lap Data.Lap, previousLaps []Data.Lap) (updatedLaps []Data.Lap) {
 
 	for _, previousLap := range previousLaps {
 		if lap.TagId == previousLap.TagId && lap.RaceId == previousLap.RaceId && lap.LapNumber == previousLap.LapNumber {
@@ -118,7 +118,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	}
 
-	currentLaps = calculateUpdatedLaps(currentLap, previousLaps)
+	currentLaps = calculateMinimalAndAverageTime(currentLap, previousLaps)
 
 	// Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
 	if config.AVERAGE_RESULTS {
