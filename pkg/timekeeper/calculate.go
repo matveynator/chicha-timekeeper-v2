@@ -58,6 +58,8 @@ func removeLapDuplicates(elements []Data.Lap) []Data.Lap {
 					encounteredDiscoveryAverageUnixTimes[w.DiscoveryAverageUnixTime] = true
 				}
 			}
+			fmt.Println("totalDiscoveryAverageUnixTime=",totalDiscoveryAverageUnixTime)
+			fmt.Println("len(encounteredDiscoveryAverageUnixTimes)=", len(encounteredDiscoveryAverageUnixTimes))
 			v.DiscoveryAverageUnixTime = totalDiscoveryAverageUnixTime / int64(len(encounteredDiscoveryAverageUnixTimes))
 			v.AverageResultsCount = uint(len(encounteredDiscoveryAverageUnixTimes))
 
@@ -97,59 +99,68 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	} else {
 		// Not an empty slice (race allready running)
 
-		//remove duplicates
-		previousLaps = removeLapDuplicates(previousLaps)
+		// Calculate data id: (currentLap.Id)
 
-		// Sort laps by discovery unix time descending (big -> small):
-		if config.AVERAGE_RESULTS {
-			sortLapsDescByDiscoveryAverageUnixTime(previousLaps)
-		} else {
-			sortLapsDescByDiscoveryMinimalUnixTime(previousLaps)
-		}
+		// Set well known data receved from rfid (currentLap.TagId, currentLap.DiscoveryMinimalUnixTime, currentLap.DiscoveryAverageUnixTime):
+		currentLap.TagId = currentTimekeeperTask.TagId
+		currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
+		currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
 
-		for _, previousLap := range previousLaps {
-			fmt.Printf("TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d \n", previousLap.TagId, previousLap.DiscoveryMinimalUnixTime, previousLap.AverageResultsCount, previousLap.RaceId, previousLap.LapNumber)
-
-		}
-
-		//get current race Id
-		var currentRaceId uint
+		// Calculate currentRaceId:
 		previousLapsCopy := previousLaps
-		currentRaceId, err = getCurrentRaceId(currentTimekeeperTask, previousLapsCopy, config)
+		currentLap.RaceId, err = getCurrentRaceId(currentTimekeeperTask, previousLapsCopy, config)
 		if err != nil {
 			log.Println(err)
 			return
-		} else {
-			log.Println("currentRaceId:", currentRaceId)
-
-			//get my current race lap number
-			var myCurrentRaceLapNumber uint
-			myCurrentRaceLapNumber, err = getMyCurrentRaceLapNumber(currentTimekeeperTask, previousLapsCopy, config)
-			if err != nil {
-				log.Println(err)
-				return
-			} else {
-				log.Println("myCurrentRaceLapNumber:", myCurrentRaceLapNumber)
-
-				//currentLap.Id = 1
-				currentLap.TagId = currentTimekeeperTask.TagId
-				currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
-				currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
-				//currentLap.AverageResultsCount = 1
-				currentLap.RaceId = currentRaceId
-				//currentLap.RacePosition = 1
-				//currentLap.TimeBehindTheLeader = 0
-				currentLap.LapNumber = myCurrentRaceLapNumber
-				//currentLap.LapPosition = 1
-				//currentLap.LapIsCurrent = true
-				//currentLap.LapIsStrange = false
-				//currentLap.RaceFinished = false
-				//currentLap.RaceTotalTime = 0
-			}
 		}
+
+		// Calculate race lap number (currentLap.LapNumber):
+		currentLap.LapNumber, err = getMyCurrentRaceLapNumber(currentTimekeeperTask, previousLapsCopy, config)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		//currentLap.Id = 
+		//currentLap.TagId = 
+		//currentLap.DiscoveryMinimalUnixTime = 
+		//currentLap.DiscoveryAverageUnixTime = 
+		//currentLap.AverageResultsCount = 1
+		//currentLap.RaceId = 
+		//currentLap.RacePosition = 
+		//currentLap.TimeBehindTheLeader = 
+		//currentLap.LapNumber =
+		//currentLap.LapPosition = 1
+		//currentLap.LapIsCurrent = true
+		//currentLap.LapIsStrange = false
+		//currentLap.RaceFinished = false
+		//currentLap.RaceTotalTime = 0
+
+		// 1: calculate id
+
+		// 2: calculate race id
+
+		// 3: calcutale lap number
+
+	}
+	// Add currentLap to previousLaps slice:
+	currentLaps = append(previousLaps, currentLap)
+
+	// Remove duplicates
+	currentLaps = removeLapDuplicates(currentLaps)
+
+	// Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
+	if config.AVERAGE_RESULTS {
+		sortLapsDescByDiscoveryAverageUnixTime(currentLaps)
+	} else {
+		sortLapsDescByDiscoveryMinimalUnixTime(currentLaps)
 	}
 
-	//add currentLap to currentLaps slice:
-	currentLaps = append(previousLaps, currentLap)
+
+	// Echo results before return:
+	for _, currentLap := range currentLaps {
+		fmt.Printf("TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, \n", currentLap.TagId, currentLap.DiscoveryMinimalUnixTime, currentLap.DiscoveryAverageUnixTime, currentLap.AverageResultsCount, currentLap.RaceId, currentLap.LapNumber)
+	}
+
 	return
 }
