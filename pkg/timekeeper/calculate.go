@@ -11,6 +11,29 @@ import (
 
 // Check time in data is valid:
 func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Config.Settings) (valid bool, err error) {
+
+	// Get location from config time zone:
+	var location *time.Location
+	location, err = time.LoadLocation(config.TIME_ZONE)
+	if err != nil {
+		// Stop and return error:
+		valid = false
+		return
+	}
+
+	// Calculate my current time:
+	myCurrentTime := time.UnixMilli(lapToCheck.DiscoveryUnixTime).In(location)
+
+	// Calculate current system time:
+	currentSystemTime := time.Now().In(location)
+
+	// Check if current system time is after lap time + config.MINIMAL_LAP_TIME_DURATION (some very old data received?):
+	if currentSystemTime.After(myCurrentTime.Add(config.MINIMAL_LAP_TIME_DURATION)) {
+		// Stop and return error:
+		valid = false
+		return
+	}
+
 	// Check: Do we have any previous race data?
 	if len(previousLaps) == 0 {
 		// This is the first race and lap 
@@ -27,14 +50,6 @@ func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Co
 				return previousLapsCopy[i].DiscoveryMinimalUnixTime > previousLapsCopy[j].DiscoveryMinimalUnixTime
 			}
 		})
-		// Get location from config time zone:
-		var location *time.Location
-		location, err = time.LoadLocation(config.TIME_ZONE)
-		if err != nil {
-			// Stop and return error:
-			valid = false
-			return 
-		}
 		// Get anyones very last time added to memory: 
 		var lastLapTime time.Time
 		if config.AVERAGE_RESULTS {
@@ -42,8 +57,6 @@ func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Co
 		} else {
 			lastLapTime = time.UnixMilli(previousLapsCopy[0].DiscoveryMinimalUnixTime).In(location)
 		}
-		// Calculate my current time:
-		myCurrentTime := time.UnixMilli(lapToCheck.DiscoveryUnixTime).In(location)
 		// Check if my current time is after config.RACE_TIMEOUT_DURATION:
 		if myCurrentTime.After(lastLapTime.Add(config.RACE_TIMEOUT_DURATION)) {
 			// If previous race time expired (timed out), data is valid:
@@ -173,11 +186,24 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	var currentLap Data.Lap
 
+	var lapIsValid bool
+	//  1. Check if current lap data is within lap timeouts and race timeouts and not very old (some expired data?) and combine with the rest of the race data:
+	lapIsValid, err = checkLapIsValid(currentTimekeeperTask, previousLaps, config)
+	if err != nil {
+		log.Printf("Data validation error: %s \n", err)
+		return
+	} else {
+		if !lapIsValid {
+			// Data is invalid - drop it and return previousLaps:
+			log.Println("Received invalid lap data: Time is after AVERAGE_DURATION and before MINIMAL_LAP_TIME_DURATION. Skipping it.")
+			currentLaps = previousLaps
+			return
+		}
+	}
 
-	//log.Printf("calculateRaceInMemory received a new job %s\n", currentTimekeeperTask.TagId)
-
+	// Check do we have any data allready in memory?
 	if len(previousLaps) == 0 {
-		//empty slice
+		// There is no race and lap in the memory - we will create the first race and lap:
 		currentLap.Id = 1
 		currentLap.TagId = currentTimekeeperTask.TagId
 		currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
@@ -194,21 +220,6 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		currentLap.RaceTotalTime = 0
 	} else {
 		// Not an empty slice (race allready running)
-
-		var lapIsValid bool
-		//	1. Check if current lap data is within lap timeouts and race timeouts and combine with the rest of the race data:
-		lapIsValid, err = checkLapIsValid(currentTimekeeperTask, previousLaps, config) 
-		if err != nil {
-			log.Printf("Data validation error: %s \n", err)
-			return
-		} else {
-			if !lapIsValid {
-				// Data is invalid - drop it and return previousLaps:
-				log.Println("Received invalid lap data: Time is after AVERAGE_DURATION and before MINIMAL_LAP_TIME_DURATION. Skipping it.")
-				currentLaps = previousLaps
-				return
-			}
-		}
 
 		// 2. Set well known data receved from rfid (currentLap.TagId, currentLap.DiscoveryMinimalUnixTime, currentLap.DiscoveryAverageUnixTime):
 		currentLap.TagId = currentTimekeeperTask.TagId
