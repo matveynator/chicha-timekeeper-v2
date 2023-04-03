@@ -94,7 +94,6 @@ func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps 
 				}
 			})
 
-			log.Println("myPreviousLaps[0].LapNumber = ", myPreviousLaps[0].LapNumber) 
 			var location *time.Location
 			location, err = time.LoadLocation(config.TIME_ZONE)
 			if err != nil {
