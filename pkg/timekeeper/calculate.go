@@ -9,7 +9,7 @@ import (
 	"chicha/pkg/config"
 )
 
-// Check data is valid:
+// Check time in data is valid:
 func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Config.Settings) (valid bool, err error) {
 	// Check: Do we have any previous race data?
 	if len(previousLaps) == 0 {
@@ -195,14 +195,14 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	} else {
 		// Not an empty slice (race allready running)
 
-		var dataIsValid bool
+		var lapIsValid bool
 		//	1. Check if current lap data is within lap timeouts and race timeouts and combine with the rest of the race data:
-		dataIsValid, err = checkLapIsValid(currentTimekeeperTask, previousLaps, config) 
+		lapIsValid, err = checkLapIsValid(currentTimekeeperTask, previousLaps, config) 
 		if err != nil {
 			log.Printf("Data validation error: %s \n", err)
 			return
 		} else {
-			if !dataIsValid {
+			if !lapIsValid {
 				// Data is invalid - drop it and return previousLaps:
 				log.Println("Received invalid lap data: Time is after AVERAGE_DURATION and before MINIMAL_LAP_TIME_DURATION. Skipping it.")
 				currentLaps = previousLaps
