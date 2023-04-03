@@ -2,7 +2,6 @@ package Timekeeper
 
 import (
 	"log"
-	"fmt"
 	"sort"
 	"time"
 	"chicha/pkg/data"
@@ -195,7 +194,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	} else {
 		if !lapIsValid {
 			// Data is invalid - drop it and return previousLaps:
-			log.Println("Received invalid lap data: Time is after AVERAGE_DURATION and before MINIMAL_LAP_TIME_DURATION. Skipping it.")
+			log.Println("Received invalid lap data. Skipping it.")
 			currentLaps = previousLaps
 			return
 		}
@@ -269,9 +268,11 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	}
 
 	// 7. Echo results before return:
+	/*
 	for _, lap := range currentLaps {
-		fmt.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber)
 	}
+	*/
 
 	// 8. Return currentLaps slice or error.
 	return

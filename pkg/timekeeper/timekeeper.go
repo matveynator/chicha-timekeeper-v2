@@ -5,6 +5,7 @@ import (
 
 	"chicha/pkg/data"
 	"chicha/pkg/config"
+
 )
 
 
@@ -44,11 +45,18 @@ func timekeeperWorkerRun(config Config.Settings) (err error) {
 		case currentTimekeeperTask := <- TimekeeperTask :
 			CurrentLaps, err = calculateRaceInMemory(currentTimekeeperTask, CurrentLaps, config)
 			if err != nil {
-				log.Println(err)
+				log.Println("Timekeeper fatal error: ", err)
 				return
 			}	else {
 				log.Println("laps capacity =", len(CurrentLaps))
 			}
+
+			// Echo results:
+			for _, lap := range CurrentLaps {
+				log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber)
+			}
+
+
 		}
 	}
 }
