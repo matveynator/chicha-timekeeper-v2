@@ -141,46 +141,6 @@ func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
 	})
 }
 
-// Calculate Id, DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates.
-func calculateIdMinimalAverageTimeRemoveDupes(lap Data.Lap, previousLaps []Data.Lap) (updatedLaps []Data.Lap) {
-
-	for _, previousLap := range previousLaps {
-		if lap.TagId == previousLap.TagId && lap.RaceId == previousLap.RaceId && lap.LapNumber == previousLap.LapNumber {
-			if lap.DiscoveryMinimalUnixTime > previousLap.DiscoveryMinimalUnixTime {
-				// Replace DiscoveryMinimalUnixTime with smaller value:
-				lap.DiscoveryMinimalUnixTime = previousLap.DiscoveryMinimalUnixTime
-			}
-			// Calculate DiscoveryAverageUnixTime and AverageResultsCount:
-			lap.DiscoveryAverageUnixTime = (lap.DiscoveryAverageUnixTime + previousLap.DiscoveryAverageUnixTime)/2
-
-			// Set first AverageResultsCount = 1:
-			if previousLap.AverageResultsCount == 0 {
-				previousLap.AverageResultsCount = 1
-			}
-			lap.AverageResultsCount = previousLap.AverageResultsCount + 1
-
-
-			// Calculate Id:
-			if previousLap.Id > 0 {
-				// Set old Id if available:
-				lap.Id = previousLap.Id
-			} else {
-				// Calculate next Id if data is new:
-				lap.Id = getNextId (previousLaps)
-			}
-
-
-		} else {
-			// Recreate data slice with old data not related to current:
-			updatedLaps = append(updatedLaps, previousLap)
-		}
-	}
-
-	updatedLaps = append(updatedLaps, lap)
-
-	return updatedLaps
-}
-
 func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (currentLaps []Data.Lap, err error) {
 
 	var currentLap Data.Lap
@@ -246,11 +206,11 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.DiscoveryAverageUnixTime = +
 		//currentLap.AverageResultsCount = +
 		//currentLap.RaceId = +
-		//currentLap.RacePosition = 
+		//currentLap.RacePosition = ?
 		//currentLap.TimeBehindTheLeader = 
 		//currentLap.LapNumber = +
-		//currentLap.LapPosition = 
-		//currentLap.RaceTotalTime =
+		//currentLap.LapPosition = ?
+		//currentLap.RaceTotalTime = ?
 
 		//currentLap.LapIsCurrent = 
 		//currentLap.LapIsStrange = 
@@ -258,17 +218,66 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.RaceTotalTime = 
 
 	}
-	// 5. Calculate Id, DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates.
-	currentLaps = calculateIdMinimalAverageTimeRemoveDupes(currentLap, previousLaps)
 
-	// 6. Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
+
+	// 5. Calculate Id, DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates BEGIN:.
+	// Create slice copy with data from old laps not related to current lap BEGIN:
+	var OtherOldLaps []Data.Lap
+	// Create slice copy with data from old laps not related to current lap END.
+	for _, previousLap := range previousLaps {
+		// Rewrite my lap data in memory with updated new data (DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount) removing duplicates BEGIN:
+		if currentLap.TagId == previousLap.TagId && currentLap.RaceId == previousLap.RaceId && currentLap.LapNumber == previousLap.LapNumber {
+
+			// Calculate DiscoveryMinimalUnixTime BEGIN:
+			if currentLap.DiscoveryMinimalUnixTime > previousLap.DiscoveryMinimalUnixTime {
+				currentLap.DiscoveryMinimalUnixTime = previousLap.DiscoveryMinimalUnixTime
+			}
+			// Calculate DiscoveryMinimalUnixTime END.
+
+			// Calculate DiscoveryAverageUnixTime BEGIN:
+			currentLap.DiscoveryAverageUnixTime = (currentLap.DiscoveryAverageUnixTime + previousLap.DiscoveryAverageUnixTime)/2
+			// Calculate DiscoveryAverageUnixTime END.
+
+			// Calculate AverageResultsCount BEGIN:
+			if previousLap.AverageResultsCount == 0 {
+				previousLap.AverageResultsCount = 1
+			} 
+			currentLap.AverageResultsCount = previousLap.AverageResultsCount + 1
+			// Calculate AverageResultsCount END.
+
+			// Calculate Lap.Id BEGIN:
+			if previousLap.Id > 0 {
+				// Set old Id if available:
+				currentLap.Id = previousLap.Id
+			} else {
+				// Calculate next Lap.Id if no old data available:
+				currentLap.Id = getNextId (previousLaps)
+			}
+			// Calculate Lap.Id END.
+		}
+		// Rewrite my lap data in memory with updated new data (DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount) removing duplicates END.
+		// Recreate data slice with data not related to current lap BEGIN:
+		if currentLap.TagId != previousLap.TagId || currentLap.RaceId != previousLap.RaceId || currentLap.LapNumber != previousLap.LapNumber {
+			// Recreate data slice with old race data not related to current lap :
+			OtherOldLaps = append(OtherOldLaps, previousLap)
+		}
+		// Recreate data slice with data not related to current lap END.
+	}
+	// Remove lap duplicates in memory: otherOldLaps + CurrentLap 
+	currentLaps = append(OtherOldLaps, currentLap)
+
+
+	// 6. Calculate Race Position:
+
+
+	// 7. Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
 	if config.AVERAGE_RESULTS {
 		sortLapsDescByDiscoveryAverageUnixTime(currentLaps)
 	} else {
 		sortLapsDescByDiscoveryMinimalUnixTime(currentLaps)
 	}
 
-	// 7. Echo results before return:
+	// X. Echo results before return:
 	for _, lap := range currentLaps {
 		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber)
 	}
