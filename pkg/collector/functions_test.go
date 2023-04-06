@@ -1,6 +1,7 @@
 package Collector
 
 import (
+	"fmt"
 	"testing"
 	"chicha/pkg/data"
 	"chicha/pkg/config"
@@ -25,6 +26,7 @@ func TestParseCSVLine(t *testing.T) {
 	for _,testCase := range testData {
 		//check1:
 		testResult, _ := parseCSVLine(testCase.csvInput, "8.8.8.8")
+		fmt.Println("CSV testResult.TagId=", testResult.TagId)
 		if testResult != testCase.csvOutput  {
 			t.Errorf("Incorrect result. Expect %v, got %v", testCase.csvOutput, testResult)
 		}
@@ -51,6 +53,7 @@ func TestParseXMLPacket(t *testing.T) {
 
 	for _,testCase := range testData {
 		testResult, _ := parseXMLPacket(testCase.xmlInput, "8.8.8.8", config)
+		fmt.Println("XML testResult.TagId=", testResult.TagId)
 		if testResult != testCase.xmlOutput  {
 			t.Errorf("Incorrect result. Expect %v, got %v", testCase.xmlOutput, testResult)
 		}

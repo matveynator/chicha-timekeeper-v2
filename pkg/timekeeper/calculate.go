@@ -240,21 +240,22 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 			return
 		}
 
-
-		// currentLap.Id = 
-		//currentLap.TagId = 
-		//currentLap.DiscoveryMinimalUnixTime = 
-		//currentLap.DiscoveryAverageUnixTime = 
-		//currentLap.AverageResultsCount = 1
-		//currentLap.RaceId = 
+		// currentLap.Id = + 
+		//currentLap.TagId = + 
+		//currentLap.DiscoveryMinimalUnixTime = + 
+		//currentLap.DiscoveryAverageUnixTime = +
+		//currentLap.AverageResultsCount = +
+		//currentLap.RaceId = +
 		//currentLap.RacePosition = 
 		//currentLap.TimeBehindTheLeader = 
-		//currentLap.LapNumber =
-		//currentLap.LapPosition = 1
-		//currentLap.LapIsCurrent = true
-		//currentLap.LapIsStrange = false
-		//currentLap.RaceFinished = false
-		//currentLap.RaceTotalTime = 0
+		//currentLap.LapNumber = +
+		//currentLap.LapPosition = 
+		//currentLap.RaceTotalTime =
+
+		//currentLap.LapIsCurrent = 
+		//currentLap.LapIsStrange = 
+		//currentLap.RaceFinished = 
+		//currentLap.RaceTotalTime = 
 
 	}
 	// 5. Calculate Id, DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates.
@@ -268,11 +269,9 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	}
 
 	// 7. Echo results before return:
-	/*
 	for _, lap := range currentLaps {
 		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber)
 	}
-	*/
 
 	// 8. Return currentLaps slice or error.
 	return

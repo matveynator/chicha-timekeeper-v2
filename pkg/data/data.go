@@ -1,7 +1,7 @@
 package Data
 
 type RawData  struct {
-	TagId                       string
+	TagId                       string `xml:"TagID"`
 	DiscoveryUnixTime           int64 
 	ReaderIP                    string
 	Antenna                     uint
@@ -9,7 +9,7 @@ type RawData  struct {
 }
 
 type RawXMLData  struct {
-	TagId                       string
+	TagId                       string `xml:"TagID"`
 	DiscoveryTime           		string
 	Antenna                     uint
 	ReaderIP										string

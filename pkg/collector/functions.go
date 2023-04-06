@@ -44,6 +44,7 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 						return
 					} else {
 						rawData.TagId = string(strings.TrimSpace(csvField[0]))
+
 						rawData.Antenna = uint(antennaPosition)
 
 						if numberOfCSVColumns == 3 {
@@ -88,6 +89,7 @@ func parseXMLPacket(data []byte, remoteIPAddress string, config Config.Settings)
 			log.Println("xml.Unmarshal ERROR:", err)
 			return
 		}
+
 		var loc *time.Location
 		loc, err = time.LoadLocation(config.TIME_ZONE)
 		if err != nil {
