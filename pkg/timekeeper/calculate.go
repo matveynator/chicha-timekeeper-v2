@@ -109,6 +109,17 @@ func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Co
 }
 
 
+func calculateRacePosition(currentLap Data.Lap, otherOldLaps []Data.Lap, raceType string) (racePosition uint, err error) {
+
+	if ( raceType == "mass-start" ) {
+
+	} else if (raceType == "delayed-start") {
+
+	}
+
+	return
+
+}
 
 
 // Calculate next Id:
@@ -183,7 +194,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		// 2. Set well known data receved from rfid (currentLap.TagId, currentLap.DiscoveryMinimalUnixTime, currentLap.DiscoveryAverageUnixTime):
 		currentLap.TagId = currentTimekeeperTask.TagId
 		currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
-		currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
+	  currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
 
 		// 3. Calculate currentRaceId:
 		previousLapsCopy := previousLaps
@@ -206,11 +217,14 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.DiscoveryAverageUnixTime = +
 		//currentLap.AverageResultsCount = +
 		//currentLap.RaceId = +
-		//currentLap.RacePosition = ?
+		//currentLap.RacePosition = 
 		//currentLap.TimeBehindTheLeader = 
-		//currentLap.LapNumber = +
-		//currentLap.LapPosition = ?
-		//currentLap.RaceTotalTime = ?
+		//currentLap.LapNumber = 
+		//currentLap.LapTime = ?
+		//currentLap.LapPosition = 
+  	//currentLap.BestLapTime =
+	  //currentLap.BestLapNumber = 
+		//currentLap.RaceTotalTime = 
 
 		//currentLap.LapIsCurrent = 
 		//currentLap.LapIsStrange = 
@@ -222,9 +236,11 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// 5. Calculate Id, DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates BEGIN:.
 	// Create slice copy with data from old laps not related to current lap BEGIN:
-	var OtherOldLaps []Data.Lap
+	var otherOldLaps []Data.Lap
 	// Create slice copy with data from old laps not related to current lap END.
 	for _, previousLap := range previousLaps {
+
+
 		// Rewrite my lap data in memory with updated new data (DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount) removing duplicates BEGIN:
 		if currentLap.TagId == previousLap.TagId && currentLap.RaceId == previousLap.RaceId && currentLap.LapNumber == previousLap.LapNumber {
 
@@ -232,18 +248,19 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 			if currentLap.DiscoveryMinimalUnixTime > previousLap.DiscoveryMinimalUnixTime {
 				currentLap.DiscoveryMinimalUnixTime = previousLap.DiscoveryMinimalUnixTime
 			}
-			// Calculate DiscoveryMinimalUnixTime END.
+			// END.
 
 			// Calculate DiscoveryAverageUnixTime BEGIN:
 			currentLap.DiscoveryAverageUnixTime = (currentLap.DiscoveryAverageUnixTime + previousLap.DiscoveryAverageUnixTime)/2
-			// Calculate DiscoveryAverageUnixTime END.
+			// END.
 
 			// Calculate AverageResultsCount BEGIN:
 			if previousLap.AverageResultsCount == 0 {
 				previousLap.AverageResultsCount = 1
 			} 
 			currentLap.AverageResultsCount = previousLap.AverageResultsCount + 1
-			// Calculate AverageResultsCount END.
+			// END.
+
 
 			// Calculate Lap.Id BEGIN:
 			if previousLap.Id > 0 {
@@ -253,18 +270,30 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 				// Calculate next Lap.Id if no old data available:
 				currentLap.Id = getNextId (previousLaps)
 			}
-			// Calculate Lap.Id END.
+			// END.
 		}
+
+
 		// Rewrite my lap data in memory with updated new data (DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount) removing duplicates END.
 		// Recreate data slice with data not related to current lap BEGIN:
 		if currentLap.TagId != previousLap.TagId || currentLap.RaceId != previousLap.RaceId || currentLap.LapNumber != previousLap.LapNumber {
 			// Recreate data slice with old race data not related to current lap :
-			OtherOldLaps = append(OtherOldLaps, previousLap)
+			otherOldLaps = append(otherOldLaps, previousLap)
 		}
-		// Recreate data slice with data not related to current lap END.
+		// END.
+
+
+		// Calculate RacePosition BEGIN:
+		currentLap.RacePosition, err = calculateRacePosition(currentLap, otherOldLaps, config.RACE_TYPE)
+		if err != nil {
+			log.Printf("calculateRacePosition error: %s \n", err)
+			return
+		} 
+		// END.
+
 	}
 	// Remove lap duplicates in memory: otherOldLaps + CurrentLap 
-	currentLaps = append(OtherOldLaps, currentLap)
+	currentLaps = append(otherOldLaps, currentLap)
 
 
 	// 6. Calculate Race Position:

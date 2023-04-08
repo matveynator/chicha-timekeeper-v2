@@ -11,7 +11,7 @@ import (
 )
 
 	type Settings struct {
-		APP_NAME, VERSION, COLLECTOR_LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS_HASH, WEB_LISTENER_ADDRESS, PROXY_ADDRESS, DB_TYPE, DB_FILE_PATH, DB_FULL_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE string
+		APP_NAME, VERSION, COLLECTOR_LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS_HASH, WEB_LISTENER_ADDRESS, PROXY_ADDRESS, DB_TYPE, DB_FILE_PATH, DB_FULL_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE, RACE_TYPE string
 		PG_PORT int
 		AVERAGE_RESULTS bool
 		RACE_TIMEOUT_DURATION, MINIMAL_LAP_TIME_DURATION, AVERAGE_DURATION, DB_SAVE_INTERVAL_DURATION time.Duration
@@ -36,6 +36,10 @@ import (
 	func ParseFlags() (config Settings)  { 
 		config.APP_NAME = "chicha"
 		flagVersion := flag.Bool("version", false, "Output version information")
+
+
+		flag.StringVar(&config.RACE_TYPE, "race-type", "mass-start", "Valid race calculation variants are: delayed-start or mass-start.")
+
 		flag.StringVar(&config.COLLECTOR_LISTENER_ADDRESS, "collector", "0.0.0.0:4000", "Provide IP address and port to collect and parse data from RFID and timing readers.")
 		flag.StringVar(&config.WEB_LISTENER_ADDRESS, "web", "0.0.0.0:80", "Provide IP address and port to listen for HTTP connections from clients.")
 		flag.StringVar(&config.PROXY_ADDRESS, "proxy", "", "Proxy incoming data to another chicha collector. For example: -proxy '10.9.8.7:4000'.")
@@ -68,6 +72,12 @@ import (
 
 		//process all flags
 		flag.Parse()
+
+		//config.RACE_TYPE
+		if config.RACE_TYPE != "mass-start" && config.RACE_TYPE != "delayed-start" {
+			fmt.Printf("Error: race-type must be 'mass-start' or 'delayed-start', but you defined: %s. \n", config.RACE_TYPE)
+			os.Exit(1)
+		}
 
 		//делаем хеш от порта коллектора чтобы использовать в уникальном названии файла бд
 		config.COLLECTOR_LISTENER_ADDRESS_HASH = hash(config.COLLECTOR_LISTENER_ADDRESS)
