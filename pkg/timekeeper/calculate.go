@@ -109,14 +109,49 @@ func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Co
 }
 
 
-func calculateRacePosition(currentLap Data.Lap, otherOldLaps []Data.Lap, raceType string) (racePosition uint, err error) {
+func calculateRacePosition(currentLap Data.Lap, otherOldLaps []Data.Lap, config Config.Settings) (racePosition uint, err error) {
 
-	if ( raceType == "mass-start" ) {
+//create a copy of otherOldLaps
+allLaps := make([]Data.Lap, len(otherOldLaps))
+copy(allLaps, otherOldLaps)
 
-	} else if (raceType == "delayed-start") {
+//add current lap to allLaps copy:
+allLaps = append(allLaps, currentLap)
+
+	// Calculate race position in a "delayed-start" race:
+	if config.RACE_TYPE == "delayed-start" {
+		// Sort allLaps by time big->small :
+		if config.AVERAGE_RESULTS {
+			sortLapsDescByDiscoveryAverageUnixTime(allLaps)
+		} else {
+			sortLapsDescByDiscoveryMinimalUnixTime(allLaps)
+		}
+		// Get biggest lap number available:
+		maxLapNumberInRace := allLaps[0].LapNumber
+		log.Println("maxLapNumberInRace = ", maxLapNumberInRace)
+
+		// For each available lap numbers beginning with 0:
+		for lapNumber=0, lapNumber <= maxLapNumberInRace, lapNumber++ {
+			sameLapNumber := []Data.Lap	
+			for _, lap := range allLaps {
+				if lap.LapNumber == lapNumber {
+					sameLapNumber = append(sameLapNumber, lap)
+				}
+			}
+
+			sortLapsAscByDiscoveryAverageUnixTime(sameLapNumber)
+			
+			for position, sameLap := range sameLapNumber {
+				
+			}
+			
+		}
+
+	} else if config.RACE_TYPE == "mass-start" {
 
 	}
 
+	racePosition = 555
 	return
 
 }
@@ -139,16 +174,28 @@ func getNextId (laps []Data.Lap) (id int64) {
 // Sort slice by discovery average unix time descending (big -> small):
 func sortLapsDescByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
-		//log.Println("Average: sorting laps by DiscoveryAverageUnixTime")
 		return lapsToSort[i].DiscoveryAverageUnixTime > lapsToSort[j].DiscoveryAverageUnixTime
+	})
+}
+
+// Sort slice by discovery average unix time ascending (small -> big):
+func sortLapsAscByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		return lapsToSort[i].DiscoveryAverageUnixTime < lapsToSort[j].DiscoveryAverageUnixTime
 	})
 }
 
 // Sort slice by discovery minimal unix time descending (big -> small):
 func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
-		//log.Println("Minimal: sorting laps by DiscoveryMinimalUnixTime")
 		return lapsToSort[i].DiscoveryMinimalUnixTime > lapsToSort[j].DiscoveryMinimalUnixTime
+	})
+}
+
+// Sort slice by discovery minimal unix time ascending (small -> big):
+func sortLapsAscByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		return lapsToSort[i].DiscoveryMinimalUnixTime < lapsToSort[j].DiscoveryMinimalUnixTime
 	})
 }
 
@@ -284,7 +331,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 
 		// Calculate RacePosition BEGIN:
-		currentLap.RacePosition, err = calculateRacePosition(currentLap, otherOldLaps, config.RACE_TYPE)
+		currentLap.RacePosition, err = calculateRacePosition(currentLap, otherOldLaps, config)
 		if err != nil {
 			log.Printf("calculateRacePosition error: %s \n", err)
 			return
