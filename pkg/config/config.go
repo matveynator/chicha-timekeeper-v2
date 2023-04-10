@@ -9,6 +9,7 @@ import (
 	"hash/fnv"
 
 )
+	var CompileVersion string
 
 	type Settings struct {
 		APP_NAME, VERSION, COLLECTOR_LISTENER_ADDRESS, COLLECTOR_LISTENER_ADDRESS_HASH, WEB_LISTENER_ADDRESS, PROXY_ADDRESS, DB_TYPE, DB_FILE_PATH, DB_FULL_FILE_PATH, PG_HOST, PG_USER, PG_PASS, PG_DB_NAME, PG_SSL, TIME_ZONE, RACE_TYPE string
@@ -84,6 +85,9 @@ import (
 
 		//путь к файлу бд
 		config.DB_FULL_FILE_PATH = fmt.Sprintf(config.DB_FILE_PATH+"/"+config.APP_NAME+"."+config.COLLECTOR_LISTENER_ADDRESS_HASH+".db."+config.DB_TYPE)
+
+		//set version from CompileVersion variable at build time
+		config.VERSION = CompileVersion 
 
 		if *flagVersion  {
 			if config.VERSION != "" {

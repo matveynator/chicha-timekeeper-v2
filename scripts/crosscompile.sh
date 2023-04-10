@@ -26,8 +26,8 @@ rm -f ${git_root_path}/binaries/latest;
 
 cd ${git_root_path}/binaries; ln -s ${version} latest; cd ${git_root_path}/scripts;
 
-for os in linux freebsd netbsd openbsd aix android illumos ios solaris plan9 darwin dragonfly windows;
-#for os in linux;
+#for os in linux freebsd netbsd openbsd aix android illumos ios solaris plan9 darwin dragonfly windows;
+for os in darwin;
 do
 	for arch in "amd64" "386" "arm" "arm64" "mips64" "mips64le" "mips" "mipsle" "ppc64" "ppc64le" "riscv64" "s390x" "wasm"
 	do
@@ -37,13 +37,15 @@ do
 		
 		mkdir -p ../binaries/${version}/${target_os_name}/${arch}
 
-		GOOS=${os} GOARCH=${arch} go build -ldflags "-X chicha/packages/config.VERSION=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go 2> /dev/null
+		GOOS=${os} GOARCH=${arch} go build -ldflags "-X chicha/pkg/config.CompileVersion=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go 2> /dev/null
+
+
 		if [ "$?" != "0" ]
 		#if compilation failed - remove folders - else copy config file.
 		then
 		  rm -rf ../binaries/${version}/${target_os_name}/${arch}
 		else
-		  echo "GOOS=${os} GOARCH=${arch} go build -ldflags "-X chicha/packages/config.VERSION=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go"
+		  echo "GOOS=${os} GOARCH=${arch} go build -ldflags "-X chicha/pkg/config.CompileVersion=${version}" -o ../binaries/${version}/${target_os_name}/${arch}/${execution_file} ../chicha.go"
 		fi
 	done
 done
