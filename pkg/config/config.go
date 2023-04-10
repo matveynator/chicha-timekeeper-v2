@@ -38,7 +38,7 @@ import (
 		flagVersion := flag.Bool("version", false, "Output version information")
 
 
-		flag.StringVar(&config.RACE_TYPE, "race-type", "mass-start", "Valid race calculation variants are: delayed-start or mass-start.\n\n mass-start: the start time is not important, the first gate passage is equal to the first (short) lap/stage, positions are counted from the first (leader) to cross the finish line.\n\n delayed-start: the start time is taken into account, the first gate passage is equal to the start time, positions are counted based on the minimum time to complete a given number of laps/stages/gates.")
+		flag.StringVar(&config.RACE_TYPE, "race-type", "mass-start", "Valid race calculation variants are: 'delayed-start' or 'mass-start'. 1. 'mass-start': start time is not taken into account as everybody starts at the same time, the first gate passage is equal to the short lap, positions are counted based on the minimum time to complete maximum number of laps/stages/gates including the short lap. 2. 'delayed-start': start time is taken into account as everyone starts with some time delay, the first gate passage (short lap) is equal to the start time, positions are counted based on the minimum time to complete maximum number of laps/stages/gates excluding short lap.")
 
 		flag.StringVar(&config.COLLECTOR_LISTENER_ADDRESS, "collector", "0.0.0.0:4000", "Provide IP address and port to collect and parse data from RFID and timing readers.")
 		flag.StringVar(&config.WEB_LISTENER_ADDRESS, "web", "0.0.0.0:80", "Provide IP address and port to listen for HTTP connections from clients.")
@@ -47,7 +47,7 @@ import (
 		flag.DurationVar(&config.RACE_TIMEOUT_DURATION, "timeout", 2*time.Minute, "Set race timeout duration. After this time if nobody passes the finish line the race will be stopped. Valid time units are: 's' (second), 'm' (minute), 'h' (hour).")
 		flag.DurationVar(&config.MINIMAL_LAP_TIME_DURATION, "lap-time", 45*time.Second, "Minimal lap time duration. Results smaller than this duration would be considered wrong." )
 		flag.DurationVar(&config.AVERAGE_DURATION, "average-duration", 1000*time.Millisecond, "Duration to calculate average results. Results passed to reader during this duration will be calculated as average result." )
-		flag.BoolVar(&config.AVERAGE_RESULTS, "average", true, "Calculate average results instead of only first results.")
+		flag.BoolVar(&config.AVERAGE_RESULTS, "average", false, "Calculate average results instead of minimal results.")
 
 		//db
 		flag.StringVar(&config.DB_FILE_PATH, "db-path", ".", "Provide path to writable directory to store database data.")
@@ -91,5 +91,21 @@ import (
 			}
 			os.Exit(0)
 		}
+
+		// Startup banner START:
+		fmt.Printf("Starting %s ", config.APP_NAME)
+		if config.VERSION != "" {
+			fmt.Printf("version %s ", config.VERSION)
+		}
+		fmt.Printf("at %s and web at %s, race type is \"%s\" and timezone is %s, minimal lap/stage duration is %s. ", config.COLLECTOR_LISTENER_ADDRESS, config.WEB_LISTENER_ADDRESS, config.RACE_TYPE, config.TIME_ZONE, config.MINIMAL_LAP_TIME_DURATION)
+
+		if config.AVERAGE_RESULTS  {
+			fmt.Printf("Calculating average time results.\n")
+		} else {
+			fmt.Printf("Calculating minimal time results.\n")
+		}
+		// END.
+
+
 		return
 	}

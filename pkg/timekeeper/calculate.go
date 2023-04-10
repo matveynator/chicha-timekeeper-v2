@@ -109,52 +109,84 @@ func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Co
 }
 
 
-func calculateRacePosition(currentLap Data.Lap, otherOldLaps []Data.Lap, config Config.Settings) (racePosition uint, err error) {
+func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Config.Settings) (lapTime int64, err error) {
 
-//create a copy of otherOldLaps
-allLaps := make([]Data.Lap, len(otherOldLaps))
-copy(allLaps, otherOldLaps)
+	// Create a copy of otherOldLaps
+	allLaps := make([]Data.Lap, len(otherOldLaps))
+	copy(allLaps, otherOldLaps)
 
-//add current lap to allLaps copy:
-allLaps = append(allLaps, currentLap)
+	// Add current lap to allLaps copy:
+	allLaps = append(allLaps, currentLap)
 
-/*
-	// Calculate race position in a "mass-start" race:
-	if config.RACE_TYPE == "mass-start" {
-		// Sort allLaps by time big->small :
-		if config.AVERAGE_RESULTS {
-			sortLapsDescByDiscoveryAverageUnixTime(allLaps)
-		} else {
-			sortLapsDescByDiscoveryMinimalUnixTime(allLaps)
+	// Sort by time ascending small->big :
+	if config.AVERAGE_RESULTS {
+		sortLapsAscByDiscoveryAverageUnixTime(allLaps)
+	} else {
+		sortLapsAscByDiscoveryMinimalUnixTime(allLaps)
+	}
+
+	// Get all laps in the same lap number of the same race:
+	var sameLapNumberLaps []Data.Lap
+	for _, lap := range allLaps {
+		if lap.RaceId == currentLap.RaceId && lap.LapNumber == currentLap.LapNumber {
+			sameLapNumberLaps = append(sameLapNumberLaps, lap)
 		}
-		// Get biggest lap number available:
-		maxLapNumberInRace := allLaps[0].LapNumber
-		log.Println("maxLapNumberInRace = ", maxLapNumberInRace)
+	}
 
-		// For each available lap numbers beginning with 0:
-		for lapNumber=0, lapNumber <= maxLapNumberInRace, lapNumber++ {
-			sameLapNumber := []Data.Lap	
-			for _, lap := range allLaps {
-				if lap.LapNumber == lapNumber {
-					sameLapNumber = append(sameLapNumber, lap)
+	// Sort by time ascending small->big :
+	if config.AVERAGE_RESULTS {
+		sortLapsAscByDiscoveryAverageUnixTime(sameLapNumberLaps)
+	} else {
+		sortLapsAscByDiscoveryMinimalUnixTime(sameLapNumberLaps)
+	}
+
+
+	if config.RACE_TYPE == "delayed-start" {
+		// First gate pass is a start time, so the first (zero) lap is a zero time for all:
+		// Everyone in zero lap number has zero lap time:
+		if	currentLap.LapNumber == 0 {
+			lapTime = 0 
+		} else {
+			// Non zero lap number = difference between previous lap time and current lap time:
+			for _, allLapData := range allLaps {
+				// Get my previous lap data and calculate difference with my current time:
+				if allLapData.TagId == currentLap.TagId && allLapData.RaceId == currentLap.RaceId && allLapData.LapNumber == (currentLap.LapNumber - 1) {
+					if config.AVERAGE_RESULTS {
+						lapTime = currentLap.DiscoveryAverageUnixTime - allLapData.DiscoveryAverageUnixTime 
+					} else {
+						lapTime = currentLap.DiscoveryMinimalUnixTime - allLapData.DiscoveryMinimalUnixTime
+					}
 				}
 			}
+		}
+	} else if config.RACE_TYPE == "mass-start" {
+		// First gate pass is a first small lap, so the first (zero) lap is the difference time between the first gate pass (the leader) and the current pass time. Only leader has zero lap time in zero lap number.
 
-			sortLapsAscByDiscoveryAverageUnixTime(sameLapNumber)
-			
-			for position, sameLap := range sameLapNumber {
-				
-			}
-			
+		// Get zero lap leader time:
+		 // If lap number is zero - calculcate my lap time as difference between my current time and leader time:
+		var leaderTime int64 
+		if config.AVERAGE_RESULTS {
+			leaderTime = sameLapNumberLaps[0].DiscoveryAverageUnixTime
+			lapTime = currentLap.DiscoveryAverageUnixTime - leaderTime
+		} else {
+			leaderTime = sameLapNumberLaps[0].DiscoveryMinimalUnixTime
+			lapTime = currentLap.DiscoveryMinimalUnixTime - leaderTime
 		}
 
-	} else if config.RACE_TYPE == "delayed-start" {
-
+		for _, allLapData := range allLaps { 
+			// For laps greater than zero calculate lap time as difference between my current time and my previous time: 
+			// Get my previous lap data and calculate difference with my current time:
+			if currentLap.LapNumber > 0 && allLapData.TagId == currentLap.TagId && allLapData.RaceId == currentLap.RaceId && allLapData.LapNumber == (currentLap.LapNumber - 1) {
+				if config.AVERAGE_RESULTS {
+					lapTime = currentLap.DiscoveryAverageUnixTime - allLapData.DiscoveryAverageUnixTime
+				} else {
+					lapTime = currentLap.DiscoveryMinimalUnixTime - allLapData.DiscoveryMinimalUnixTime
+				}
+			}
+		}
 	}
-*/
-	racePosition = 555
-	return
 
+	return
 }
 
 
@@ -242,7 +274,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		// 2. Set well known data receved from rfid (currentLap.TagId, currentLap.DiscoveryMinimalUnixTime, currentLap.DiscoveryAverageUnixTime):
 		currentLap.TagId = currentTimekeeperTask.TagId
 		currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
-	  currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
+		currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
 
 		// 3. Calculate currentRaceId:
 		previousLapsCopy := previousLaps
@@ -270,8 +302,8 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.LapNumber = 
 		//currentLap.LapTime = ?
 		//currentLap.LapPosition = 
-  	//currentLap.BestLapTime =
-	  //currentLap.BestLapNumber = 
+		//currentLap.BestLapTime =
+		//currentLap.BestLapNumber = 
 		//currentLap.RaceTotalTime = 
 
 		//currentLap.LapIsCurrent = 
@@ -331,10 +363,10 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		// END.
 
 
-		// Calculate RacePosition BEGIN:
-		currentLap.RacePosition, err = calculateRacePosition(currentLap, otherOldLaps, config)
+		// Calculate LapTime BEGIN:
+		currentLap.LapTime, err = calculateLapTime(currentLap, otherOldLaps, config)
 		if err != nil {
-			log.Printf("calculateRacePosition error: %s \n", err)
+			log.Printf("calculateLapTime error: %s \n", err)
 			return
 		} 
 		// END.
@@ -356,7 +388,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime)
 	}
 
 	// 8. Return currentLaps slice or error.
