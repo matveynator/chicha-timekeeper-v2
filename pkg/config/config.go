@@ -38,7 +38,7 @@ import (
 		flagVersion := flag.Bool("version", false, "Output version information")
 
 
-		flag.StringVar(&config.RACE_TYPE, "race-type", "mass-start", "Valid race calculation variants are: delayed-start or mass-start.")
+		flag.StringVar(&config.RACE_TYPE, "race-type", "mass-start", "Valid race calculation variants are: delayed-start or mass-start.\n\n mass-start: the start time is not important, the first gate passage is equal to the first (short) lap/stage, positions are counted from the first (leader) to cross the finish line.\n\n delayed-start: the start time is taken into account, the first gate passage is equal to the start time, positions are counted based on the minimum time to complete a given number of laps/stages/gates.")
 
 		flag.StringVar(&config.COLLECTOR_LISTENER_ADDRESS, "collector", "0.0.0.0:4000", "Provide IP address and port to collect and parse data from RFID and timing readers.")
 		flag.StringVar(&config.WEB_LISTENER_ADDRESS, "web", "0.0.0.0:80", "Provide IP address and port to listen for HTTP connections from clients.")

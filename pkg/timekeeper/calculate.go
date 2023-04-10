@@ -118,8 +118,9 @@ copy(allLaps, otherOldLaps)
 //add current lap to allLaps copy:
 allLaps = append(allLaps, currentLap)
 
-	// Calculate race position in a "delayed-start" race:
-	if config.RACE_TYPE == "delayed-start" {
+/*
+	// Calculate race position in a "mass-start" race:
+	if config.RACE_TYPE == "mass-start" {
 		// Sort allLaps by time big->small :
 		if config.AVERAGE_RESULTS {
 			sortLapsDescByDiscoveryAverageUnixTime(allLaps)
@@ -147,10 +148,10 @@ allLaps = append(allLaps, currentLap)
 			
 		}
 
-	} else if config.RACE_TYPE == "mass-start" {
+	} else if config.RACE_TYPE == "delayed-start" {
 
 	}
-
+*/
 	racePosition = 555
 	return
 
