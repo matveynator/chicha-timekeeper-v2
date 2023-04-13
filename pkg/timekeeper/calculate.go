@@ -163,7 +163,7 @@ func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Confi
 		// First gate pass is a first small lap, so the first (zero) lap is the difference time between the first gate pass (the leader) and the current pass time. Only leader has zero lap time in zero lap number.
 
 		// Get zero lap leader time:
-		 // If lap number is zero - calculcate my lap time as difference between my current time and leader time:
+		// If lap number is zero - calculcate my lap time as difference between my current time and leader time:
 		var leaderTime int64 
 		if config.AVERAGE_RESULTS {
 			leaderTime = sameLapNumberLaps[0].DiscoveryAverageUnixTime
@@ -296,12 +296,17 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.DiscoveryMinimalUnixTime = + 
 		//currentLap.DiscoveryAverageUnixTime = +
 		//currentLap.AverageResultsCount = +
+
 		//currentLap.RaceId = +
+		//currentLap.RaceTotalTime = +
 		//currentLap.RacePosition = 
+
 		//currentLap.TimeBehindTheLeader = 
+		
 		//currentLap.LapNumber = 
 		//currentLap.LapTime = ?
 		//currentLap.LapPosition = 
+		
 		//currentLap.BestLapTime =
 		//currentLap.BestLapNumber = 
 		//currentLap.RaceTotalTime = 
@@ -309,7 +314,6 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.LapIsCurrent = 
 		//currentLap.LapIsStrange = 
 		//currentLap.RaceFinished = 
-		//currentLap.RaceTotalTime = 
 
 	}
 
@@ -362,16 +366,33 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		}
 		// END.
 
-
-		// Calculate LapTime BEGIN:
-		currentLap.LapTime, err = calculateLapTime(currentLap, otherOldLaps, config)
-		if err != nil {
-			log.Printf("calculateLapTime error: %s \n", err)
-			return
-		} 
-		// END.
-
 	}
+
+	// Calculate LapTime BEGIN:
+	currentLap.LapTime, err = calculateLapTime(currentLap, otherOldLaps, config)
+	if err != nil {
+		log.Printf("calculateLapTime error: %s \n", err)
+		return
+	} 
+	// END.
+
+	// Calculate RaceTotalTime BEGIN:
+	// For zero lap RaceTotalTime equals LapTime:
+	if currentLap.LapNumber == 0 {
+		currentLap.RaceTotalTime = currentLap.LapTime
+	} else {
+		// For other laps RaceTotalTime equal my previous lap RaceTotalTime + current LapTime:
+		for _, otherOldLap := range otherOldLaps {
+			if currentLap.TagId == otherOldLap.TagId && currentLap.RaceId == otherOldLap.RaceId && otherOldLap.LapNumber == currentLap.LapNumber-1 {	
+				// My previous lap is otherOldLap:
+				currentLap.RaceTotalTime = otherOldLap.RaceTotalTime + currentLap.LapTime
+			}
+		}
+	}
+	// END.
+
+
+
 	// Remove lap duplicates in memory: otherOldLaps + CurrentLap 
 	currentLaps = append(otherOldLaps, currentLap)
 
@@ -388,7 +409,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime)
 	}
 
 	// 8. Return currentLaps slice or error.
