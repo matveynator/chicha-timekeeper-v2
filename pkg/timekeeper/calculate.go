@@ -190,6 +190,20 @@ func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Confi
 }
 
 
+// Сортировка по максимальному LapNumber и минимальному RaceTotalTime:
+func sortMaxLapNumberAndMinRaceTotalTime(laps []Data.Lap) []Data.Lap {
+	sort.Slice(laps, func(i, j int) bool {
+		if laps[i].LapNumber > laps[j].LapNumber {
+			return true
+		} else if laps[i].LapNumber < laps[j].LapNumber {
+			return false
+		} else {
+			return laps[i].RaceTotalTime < laps[j].RaceTotalTime
+		}
+	})
+	return laps
+}
+
 // Calculate next Id:
 func getNextId (laps []Data.Lap) (id int64) {
 	// Set initial Id:
@@ -203,6 +217,17 @@ func getNextId (laps []Data.Lap) (id int64) {
 	// Return next Id:
 	return id + 1
 }
+
+// Check slice contains TagID:
+func containsTagId(laps []Data.Lap, tagId string) bool {
+	for _, lap := range laps {
+		if lap.TagId == tagId {
+			return true
+		}
+	}
+	return false
+}
+
 
 // Sort slice by race total time descending (big -> small):
 func sortLapsDescByRaceTotalTime (lapsToSort []Data.Lap) {
@@ -317,11 +342,11 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.RacePosition = 
 
 		//currentLap.TimeBehindTheLeader = 
-		
+
 		//currentLap.LapNumber = 
 		//currentLap.LapTime = ?
 		//currentLap.LapPosition = 
-		
+
 		//currentLap.BestLapTime =
 		//currentLap.BestLapNumber = 
 
@@ -411,31 +436,47 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	currentLaps = append(otherOldLaps, currentLap)
 
 
-	// 6. Calculate Race Position and Lap Position:
-	var currentRaceLatestLaps []Data.Lap
-
-	if config.AVERAGE_RESULTS {
-	} else {
-	}
-
-
-
-	for _, currentInMemoryLap := range currentLaps {
-		if currentInMemoryLap.RaceId == currentLap.RaceId {
-		}
-	}
-
-
-	// 7. Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
+	// 6. Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
 	if config.AVERAGE_RESULTS {
 		sortLapsDescByDiscoveryAverageUnixTime(currentLaps)
 	} else {
 		sortLapsDescByDiscoveryMinimalUnixTime(currentLaps)
 	}
 
+	// 7. Calculate Race Position and Lap Position BEGIN:
+
+	// Create current race slice only with one latest lap data per rider:
+	var currentRaceLatestLaps []Data.Lap
+
+	for _, currentInMemoryLap := range currentLaps {
+		// Create current race slice:
+		if currentInMemoryLap.RaceId == currentLap.RaceId {
+			// Add only one latest lap data per rider:
+			if !containsTagId(currentRaceLatestLaps, currentInMemoryLap.TagId) {
+				currentRaceLatestLaps = append(currentRaceLatestLaps, currentInMemoryLap)
+			}
+		}
+	}
+
+	//Сортируе по максимальному LapNumber и минимальному RaceTotalTime:
+	currentRaceLatestLaps = sortMaxLapNumberAndMinRaceTotalTime(currentRaceLatestLaps)
+
+	// Calculate position in currentRaceLatestLaps:
+	for latestPosition, latestLapData := range currentRaceLatestLaps {
+			// Set RacePosition and LapPosition in global currentLaps slice:
+			for index, lap := range currentLaps {
+					    if lap.Id == latestLapData.Id {
+								currentLaps[index].RacePosition = uint(latestPosition)+1
+								currentLaps[index].LapPosition = uint(latestPosition)+1
+							}
+			}
+	}
+	// End.
+	
+
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition)
 	}
 
 	// 8. Return currentLaps slice or error.
