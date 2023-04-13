@@ -204,6 +204,20 @@ func getNextId (laps []Data.Lap) (id int64) {
 	return id + 1
 }
 
+// Sort slice by race total time descending (big -> small):
+func sortLapsDescByRaceTotalTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		return lapsToSort[i].RaceTotalTime > lapsToSort[j].RaceTotalTime
+	})
+}
+
+// Sort slice by race total time ascending (big -> small):
+func sortLapsAscByRaceTotalTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		return lapsToSort[i].RaceTotalTime < lapsToSort[j].RaceTotalTime
+	})
+}
+
 // Sort slice by discovery average unix time descending (big -> small):
 func sortLapsDescByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
@@ -217,6 +231,7 @@ func sortLapsAscByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
 		return lapsToSort[i].DiscoveryAverageUnixTime < lapsToSort[j].DiscoveryAverageUnixTime
 	})
 }
+
 
 // Sort slice by discovery minimal unix time descending (big -> small):
 func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
@@ -309,7 +324,6 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		
 		//currentLap.BestLapTime =
 		//currentLap.BestLapNumber = 
-		//currentLap.RaceTotalTime = 
 
 		//currentLap.LapIsCurrent = 
 		//currentLap.LapIsStrange = 
@@ -397,7 +411,19 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	currentLaps = append(otherOldLaps, currentLap)
 
 
-	// 6. Calculate Race Position:
+	// 6. Calculate Race Position and Lap Position:
+	var currentRaceLatestLaps []Data.Lap
+
+	if config.AVERAGE_RESULTS {
+	} else {
+	}
+
+
+
+	for _, currentInMemoryLap := range currentLaps {
+		if currentInMemoryLap.RaceId == currentLap.RaceId {
+		}
+	}
 
 
 	// 7. Sort laps by discovery unix time descending (big -> small) depending on config.AVERAGE_RESULTS global setting:
