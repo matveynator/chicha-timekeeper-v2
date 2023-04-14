@@ -339,13 +339,13 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 		//currentLap.RaceId = +
 		//currentLap.RaceTotalTime = +
-		//currentLap.RacePosition = 
+		//currentLap.RacePosition = +
 
 		//currentLap.TimeBehindTheLeader = 
 
-		//currentLap.LapNumber = 
-		//currentLap.LapTime = ?
-		//currentLap.LapPosition = 
+		//currentLap.LapNumber = +
+		//currentLap.LapTime = +
+		//currentLap.LapPosition = +
 
 		//currentLap.BestLapTime =
 		//currentLap.BestLapNumber = 
@@ -461,22 +461,45 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	//Сортируе по максимальному LapNumber и минимальному RaceTotalTime:
 	currentRaceLatestLaps = sortMaxLapNumberAndMinRaceTotalTime(currentRaceLatestLaps)
 
+	// Slice to store leader of the race current lap:
+	var leaderCurrentLap Data.Lap
+
 	// Calculate position in currentRaceLatestLaps:
 	for latestPosition, latestLapData := range currentRaceLatestLaps {
-			// Set RacePosition and LapPosition in global currentLaps slice:
-			for index, lap := range currentLaps {
-					    if lap.Id == latestLapData.Id {
-								currentLaps[index].RacePosition = uint(latestPosition)+1
-								currentLaps[index].LapPosition = uint(latestPosition)+1
-							}
+
+		// Calculate the leader of the race current lap: 
+		if latestPosition == 0 {
+			leaderCurrentLap = latestLapData
+		}
+
+		// Set RacePosition, LapPosition and TimeBehindTheLeader in global currentLaps slice:
+		for index, lap := range currentLaps {
+			if lap.Id == latestLapData.Id {
+
+			if config.RACE_TYPE == "mass-start" {
+				currentLaps[index].RacePosition = uint(latestPosition)+1
+				currentLaps[index].LapPosition = uint(latestPosition)+1
+			} else if config.RACE_TYPE == "delayed-start" {
+				if lap.LapNumber == 0 {
+					// Zero lap in "delayed-start" race is always zero:
+					currentLaps[index].RacePosition = 0
+					currentLaps[index].LapPosition = 0
+				} else {
+					currentLaps[index].RacePosition = uint(latestPosition)+1
+					currentLaps[index].LapPosition = uint(latestPosition)+1
+				}
 			}
+				// Calculate TimeBehindTheLeader:
+				currentLaps[index].TimeBehindTheLeader = lap.RaceTotalTime - leaderCurrentLap.RaceTotalTime
+			}
+		}
 	}
 	// End.
-	
+
 
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader)
 	}
 
 	// 8. Return currentLaps slice or error.
