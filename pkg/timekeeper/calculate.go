@@ -304,7 +304,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		currentLap.TimeBehindTheLeader = 0
 		currentLap.LapNumber = 0
 		currentLap.LapPosition = 1
-		currentLap.LapIsCurrent = true
+		currentLap.LapIsLatest = true
 		currentLap.LapIsStrange = false
 		currentLap.RaceFinished = false
 		currentLap.RaceTotalTime = 0
@@ -341,18 +341,19 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		//currentLap.RaceTotalTime = +
 		//currentLap.RacePosition = +
 
-		//currentLap.TimeBehindTheLeader = 
+		//currentLap.TimeBehindTheLeader = + 
 
 		//currentLap.LapNumber = +
 		//currentLap.LapTime = +
 		//currentLap.LapPosition = +
+		//currentLap.LapIsLatest = + 
 
-		//currentLap.BestLapTime =
-		//currentLap.BestLapNumber = 
+		//currentLap.FasterOrSlowerLapTime = 
 
-		//currentLap.LapIsCurrent = 
+		//currentLap.BestLapTime = ?
+		//currentLap.BestLapNumber = ?
+
 		//currentLap.LapIsStrange = 
-		//currentLap.RaceFinished = 
 
 	}
 
@@ -448,12 +449,18 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	// Create current race slice only with one latest lap data per rider:
 	var currentRaceLatestLaps []Data.Lap
 
-	for _, currentInMemoryLap := range currentLaps {
+	for index, currentInMemoryLap := range currentLaps {
 		// Create current race slice:
 		if currentInMemoryLap.RaceId == currentLap.RaceId {
 			// Add only one latest lap data per rider:
 			if !containsTagId(currentRaceLatestLaps, currentInMemoryLap.TagId) {
+				// Mark latest lap as latest:
+				currentLaps[index].LapIsLatest = true
+				// Add latest lap to currentRaceLatestLaps slice:  
 				currentRaceLatestLaps = append(currentRaceLatestLaps, currentInMemoryLap)
+			} else {
+				// Mark not latest laps as not latest:
+				currentLaps[index].LapIsLatest = false
 			}
 		}
 	}
@@ -499,7 +506,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest)
 	}
 
 	// 8. Return currentLaps slice or error.

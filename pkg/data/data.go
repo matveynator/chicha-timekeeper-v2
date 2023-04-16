@@ -29,13 +29,13 @@ type Lap struct {
 	LapNumber                   uint
 	LapTime                     int64
 	LapPosition                 uint
-	LapIsCurrent                bool
+	LapIsLatest                 bool
 	LapIsStrange                bool
 	RaceFinished                bool
 	BestLapTime                 int64
 	BestLapNumber               uint
 	RaceTotalTime               int64
-	BetterOrWorseLapTime        int64
+	FasterOrSlowerLapTime        int64
 }
 
 
