@@ -59,7 +59,7 @@ Usage of chicha:
     	Provide IP address and port to listen for HTTP connections from clients. (default "0.0.0.0:80")
 ```
 
-## Цветовые подсказки во время гонки:
+## ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+)![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) Цветовые подсказки во время гонки:
 
 В авто- и мотоспорте, на соревнованиях, на которых спортсмены борются за лучшее время круга или за наилучший результат в гонке, используется система цветовых сигналов на табло для показа изменений времени круга.
 
