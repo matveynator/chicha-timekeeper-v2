@@ -23,6 +23,11 @@
 - Download latest version of [↓ CHICHA.](http://files.matveynator.ru/chicha2/latest/) 
 - For race testing - download [↓ RACETEST.](http://files.matveynator.ru/racetest/latest/) 
 
+### Хронограф может быть использован в двух режимах: "mass-start" и "delayed-start".
+> Существует опция конфигурации под названием "-race-type", которая позволяет выбирать тип гонки: "mass-start" (масс-старт) или "delayed-start" (отложенный старт).
+
+Режим "mass-start", - словно сигнал трубы: все участники сразу в бой! А режим "delayed-start" дает возможность стартовать поочередно, с небольшим перерывом между началом гонки. Например, в забеге на 100 метров или в мотокроссе, спортсмены могут стартовать все вместе (mass-start) или же в авторалли последовательно, с некоторым временным интервалом (delayed-start). Исходя из условий проведения соревнований, выбирается соответствующий режим работы хронографа.
+
 
 ### ![#FF0000](https://via.placeholder.com/15/FF0000/000000?text=+) ![#008000](https://via.placeholder.com/15/008000/000000?text=+) ![#EE82EE](https://via.placeholder.com/15/EE82EE/000000?text=+)  Цветовые подсказки во время гонки:
 
