@@ -28,7 +28,7 @@ import (
 
 // Если гонка не VARIABLE_DISTANCE_RACE (false):
 //currentLap.FasterOrSlowerThanPreviousLapTime = +
-//currentLap.LapIsStrange =
+//currentLap.LapIsStrange = +
 //currentLap.BestLapTime = ?
 //currentLap.BestLapNumber = ?
 
@@ -535,7 +535,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		currentLap.FasterOrSlowerThanPreviousLapTime = 0
 		currentLap.LapIsStrange = false
 	} else {
-		// For other laps RaceTotalTime equal my previous lap RaceTotalTime + current LapTime:
+		// RaceTotalTime equals my previous lap RaceTotalTime + my current LapTime:
 		for _, otherOldLap := range otherOldLaps {
 			if currentLap.TagId == otherOldLap.TagId && currentLap.RaceId == otherOldLap.RaceId && otherOldLap.LapNumber == currentLap.LapNumber-1 {	
 				// My previous lap is otherOldLap:
