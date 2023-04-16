@@ -26,10 +26,11 @@ import (
 //currentLap.LapPosition = +
 //currentLap.LapIsLatest = +
 
+// Если гонка не VARIABLE_DISTANCE_RACE (false):
 //currentLap.FasterOrSlowerThanPreviousLapTime = +
+//currentLap.LapIsStrange =
 //currentLap.BestLapTime = ?
 //currentLap.BestLapNumber = ?
-//currentLap.LapIsStrange =
 
 // getCurrentRaceId returns the race ID of the current lap based on previous laps.
 // If there are no previous laps, the race ID will be set to 1.
@@ -532,6 +533,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	if currentLap.LapNumber == 0 {
 		currentLap.RaceTotalTime = currentLap.LapTime
 		currentLap.FasterOrSlowerThanPreviousLapTime = 0
+		currentLap.LapIsStrange = false
 	} else {
 		// For other laps RaceTotalTime equal my previous lap RaceTotalTime + current LapTime:
 		for _, otherOldLap := range otherOldLaps {
@@ -541,8 +543,15 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 				// Calculate if my current lap is faster or slower than previous lap only from 2nd lap result: 
 				if currentLap.LapNumber > 1 && config.VARIABLE_DISTANCE_RACE == false {
 					currentLap.FasterOrSlowerThanPreviousLapTime = currentLap.LapTime - otherOldLap.LapTime
+					// Проверяем если текущий круг длиннее предыдущего в два раза то ставим маркер "LapIsStrange" (подозрительный круг) - возможно спортсмен упал или его данные не считались RFID считывателем - нужно сверить данные в других источниках (фотофиниш или круговые судьи).
+					if (currentLap.LapTime - otherOldLap.LapTime) >= otherOldLap.LapTime {
+						currentLap.LapIsStrange = true 
+					} else  {
+						currentLap.LapIsStrange = false
+					}
 				} else {
 					currentLap.FasterOrSlowerThanPreviousLapTime = 0
+					currentLap.LapIsStrange = false
 				}
 			}
 		}
@@ -624,7 +633,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d LapIsStrange=%t\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange)
 	}
 
 	// 8. Return currentLaps slice or error.
