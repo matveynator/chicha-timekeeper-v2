@@ -1,4 +1,4 @@
-package Collector
+package listener
 import (
 	"bytes"
 	"fmt"
