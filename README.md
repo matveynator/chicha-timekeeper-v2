@@ -12,12 +12,12 @@
 
 ### Демо версия: [http://chicha.zabiyaka.net](http://chicha.zabiyaka.net/)
 
-- Скачайте последнюю версию [↓ CHICHA.](http://files.matveynator.ru/chicha2/latest/)
+- Скачайте последнюю версию [↓ CHICHA 2.](http://files.matveynator.ru/chicha2/latest/)
 - Для запуска гонки в тестовом режиме - скачайте [↓ RACETEST.](http://files.matveynator.ru/racetest/latest/)
 
 > Поддерживаемые операционные системы: [Linix](http://files.matveynator.ru/chicha2/latest/linux), [Windows](http://files.matveynator.ru/chicha2/latest/windows), [Android](http://files.matveynator.ru/chicha2/latest/android), [Mac](http://files.matveynator.ru/chicha2/latest/mac), [IOS](http://files.matveynator.ru/chicha2/latest/ios), [FreeBSD](http://files.matveynator.ru/chicha2/latest/freebsd), [DragonflyBSD](http://files.matveynator.ru/chicha2/latest/dragonfly), [OpenBSD](http://files.matveynator.ru/chicha2/latest/openbsd), [NetBSD](http://files.matveynator.ru/chicha2/latest/netbsd), [Plan9](http://files.matveynator.ru/chicha2/latest/plan9), [AIX](http://files.matveynator.ru/chicha2/latest/aix), [Solaris](http://files.matveynator.ru/chicha2/latest/solaris), [Illumos](http://files.matveynator.ru/chicha2/latest/illumos)
 
-- Download latest version of [↓ CHICHA.](http://files.matveynator.ru/chicha2/latest/) 
+- Download latest version of [↓ CHICHA 2.](http://files.matveynator.ru/chicha2/latest/) 
 - For race testing - download [↓ RACETEST.](http://files.matveynator.ru/racetest/latest/) 
 
 ### Хронограф может быть использован в двух режимах: "mass-start" и "delayed-start".
