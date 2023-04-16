@@ -91,7 +91,7 @@ func processConnection(connection net.Conn, config Config.Settings) {
 // Start data collector from RFID readers.
 func Run(config Config.Settings) {
 	// Start listener
-	collector, err := net.Listen("tcp", config.COLLECTOR_LISTENER_ADDRESS)
+	collector, err := net.Listen("tcp", config.DAEMON_LISTENER_ADDRESS)
 	if err != nil {
 		log.Panicln("Error: collector can't start. ", err)
 	}
