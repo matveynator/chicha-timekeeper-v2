@@ -15,12 +15,12 @@ UHF-RFID compatible.
 ## [Demo: http://chicha.zabiyaka.net](http://chicha.zabiyaka.net/)
 
 
-## Usage of chicha:
+## Конфигурационные опции (необязательные):
 ```
 chicha -h
 Usage of chicha:
   -average
-    	Calculate average results instead of only first results. (default true)
+    	Calculate average results instead of minimal results.
   -average-duration duration
     	Duration to calculate average results. Results passed to reader during this duration will be calculated as average result. (default 1s)
   -collector string
@@ -47,6 +47,8 @@ Usage of chicha:
     	PostgreSQL DB user. (default "postgres")
   -proxy string
     	Proxy incoming data to another chicha collector. For example: -proxy '10.9.8.7:4000'.
+  -race-type string
+    	Valid race calculation variants are: 'delayed-start' or 'mass-start'. 1. 'mass-start': start time is not taken into account as everybody starts at the same time, the first gate passage is equal to the short lap, positions are counted based on the minimum time to complete maximum number of laps/stages/gates including the short lap. 2. 'delayed-start': start time is taken into account as everyone starts with some time delay, the first gate passage (short lap) is equal to the start time, positions are counted based on the minimum time to complete maximum number of laps/stages/gates excluding short lap. (default "mass-start")
   -timeout duration
     	Set race timeout duration. After this time if nobody passes the finish line the race will be stopped. Valid time units are: 's' (second), 'm' (minute), 'h' (hour). (default 2m0s)
   -timezone string
@@ -56,3 +58,15 @@ Usage of chicha:
   -web string
     	Provide IP address and port to listen for HTTP connections from clients. (default "0.0.0.0:80")
 ```
+
+В авто- и мотоспорте, на соревнованиях, на которых спортсмены борются за лучшее время круга или за наилучший результат в гонке, используется система цветовых сигналов на табло для показа изменений времени круга.
+
+Когда спортсмен завершает круг, его время отображается на табло, и цвет сигнала указывает на то, улучшил ли он свой результат по сравнению с предыдущим кругом или нет. Вот как работает алгоритм:
+
+Зеленый цвет: если время круга лучше предыдущего, то на табло будет отображаться зеленый цвет. Это означает, что спортсмен улучшил свой результат, и это может стимулировать его на дальнейшее улучшение времени.
+
+Красный цвет: если время круга хуже, чем предыдущее, на табло будет отображаться красный цвет. Это означает, что спортсмен ухудшил свой результат, и ему нужно работать над улучшением.
+
+Фиолетовый цвет: если на табло появляется фиолетовый цвет, это означает, что спортсмен показал лучшее время круга на трассе. Это может быть достигнуто в конце сессии, когда все спортсмены завершают свои круги, или в середине сессии, если спортсмены уже успели улучшить свои результаты.
+
+Цветовые сигналы на табло используются для помощи спортсмену в оценке своей производительности и понимании, насколько он улучшает свои результаты. Это также помогает зрителям понимать, как проходит гонка и кто лидирует.
