@@ -26,11 +26,9 @@ import (
 //currentLap.LapPosition = +
 //currentLap.LapIsLatest = +
 
-//currentLap.FasterOrSlowerThanPreviousLapTime =
-
+//currentLap.FasterOrSlowerThanPreviousLapTime = +
 //currentLap.BestLapTime = ?
 //currentLap.BestLapNumber = ?
-
 //currentLap.LapIsStrange =
 
 // getCurrentRaceId returns the race ID of the current lap based on previous laps.
@@ -533,12 +531,19 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	// For zero lap RaceTotalTime equals LapTime:
 	if currentLap.LapNumber == 0 {
 		currentLap.RaceTotalTime = currentLap.LapTime
+		currentLap.FasterOrSlowerThanPreviousLapTime = 0
 	} else {
 		// For other laps RaceTotalTime equal my previous lap RaceTotalTime + current LapTime:
 		for _, otherOldLap := range otherOldLaps {
 			if currentLap.TagId == otherOldLap.TagId && currentLap.RaceId == otherOldLap.RaceId && otherOldLap.LapNumber == currentLap.LapNumber-1 {	
 				// My previous lap is otherOldLap:
 				currentLap.RaceTotalTime = otherOldLap.RaceTotalTime + currentLap.LapTime
+				// Calculate if my current lap is faster or slower than previous lap only from 2nd lap result: 
+				if currentLap.LapNumber > 1 && config.VARIABLE_DISTANCE_RACE == false {
+					currentLap.FasterOrSlowerThanPreviousLapTime = currentLap.LapTime - otherOldLap.LapTime
+				} else {
+					currentLap.FasterOrSlowerThanPreviousLapTime = 0
+				}
 			}
 		}
 	}
@@ -619,7 +624,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t \n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime)
 	}
 
 	// 8. Return currentLaps slice or error.
