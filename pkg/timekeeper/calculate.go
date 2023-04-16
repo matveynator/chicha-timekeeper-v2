@@ -8,6 +8,31 @@ import (
 	"chicha/pkg/config"
 )
 
+// Plan:
+//currentLap.Id = +
+//currentLap.TagId = +
+//currentLap.DiscoveryMinimalUnixTime = +
+//currentLap.DiscoveryAverageUnixTime = +
+//currentLap.AverageResultsCount = +
+
+//currentLap.RaceId = +
+//currentLap.RaceTotalTime = +
+//currentLap.RacePosition = +
+
+//currentLap.TimeBehindTheLeader = +
+
+//currentLap.LapNumber = +
+//currentLap.LapTime = +
+//currentLap.LapPosition = +
+//currentLap.LapIsLatest = +
+
+//currentLap.FasterOrSlowerThanPreviousLapTime =
+
+//currentLap.BestLapTime = ?
+//currentLap.BestLapNumber = ?
+
+//currentLap.LapIsStrange =
+
 // getCurrentRaceId returns the race ID of the current lap based on previous laps.
 // If there are no previous laps, the race ID will be set to 1.
 func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (raceId uint, err error) {
@@ -419,7 +444,6 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		currentLap.LapNumber = 0
 		currentLap.LapPosition = 1
 		currentLap.LapIsLatest = true
-		currentLap.LapIsStrange = false
 		currentLap.RaceFinished = false
 		currentLap.RaceTotalTime = 0
 	} else {
@@ -444,31 +468,6 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 			log.Println(err)
 			return
 		}
-
-		// currentLap.Id = + 
-		//currentLap.TagId = + 
-		//currentLap.DiscoveryMinimalUnixTime = + 
-		//currentLap.DiscoveryAverageUnixTime = +
-		//currentLap.AverageResultsCount = +
-
-		//currentLap.RaceId = +
-		//currentLap.RaceTotalTime = +
-		//currentLap.RacePosition = +
-
-		//currentLap.TimeBehindTheLeader = + 
-
-		//currentLap.LapNumber = +
-		//currentLap.LapTime = +
-		//currentLap.LapPosition = +
-		//currentLap.LapIsLatest = + 
-
-		//currentLap.FasterOrSlowerLapTime = 
-
-		//currentLap.BestLapTime = ?
-		//currentLap.BestLapNumber = ?
-
-		//currentLap.LapIsStrange = 
-
 	}
 
 

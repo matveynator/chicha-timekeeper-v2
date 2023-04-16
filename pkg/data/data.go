@@ -25,17 +25,18 @@ type Lap struct {
 	AverageResultsCount					uint
 	RaceId                      uint
 	RacePosition                uint
-	TimeBehindTheLeader         int64
+	RaceTotalTime               int64
+	RaceFinished                bool
+
 	LapNumber                   uint
 	LapTime                     int64
 	LapPosition                 uint
+	TimeBehindTheLeader         int64
 	LapIsLatest                 bool
-	LapIsStrange                bool
-	RaceFinished                bool
+
 	BestLapTime                 int64
 	BestLapNumber               uint
-	RaceTotalTime               int64
-	FasterOrSlowerLapTime        int64
+	FasterOrSlowerThanPreviousLapTime int64
 }
 
 
