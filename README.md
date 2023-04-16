@@ -2,7 +2,7 @@
     <img property="og:image" src="https://repository-images.githubusercontent.com/577755312/57f67b11-437b-448f-b53e-cf47165612c2" width="25%">
 </p>
 
-# Chicha - это хронограф, используемый для соревнований. 
+# Chicha 2 - это хронограф, используемый для соревнований. 
 
 Мы с гордостью представляем высокопроизводительный и быстродействующий хронограф, разработанный специально для проведения соревнований в различных видах спорта, таких как бег, плавание, велосипедный спорт, мотоспорт, картинг, автоспорт, грузовиковые и квадроцикловые гонки, катерные и яхтинговые соревнования. Данный хронограф может обслуживать одновременно более 100 000 участников и совместим с технологией UHF-RFID. И мы рады предложить его вам бесплатно.
 
@@ -15,10 +15,10 @@
 
 ### Демо версия: [http://chicha.zabiyaka.net](http://chicha.zabiyaka.net/)
 
-- #### [↓ Download latest version of CHICHA.](http://files.matveynator.ru/chicha/latest/) 
-- #### [↓ Скачать последнюю версию CHICHA.](http://files.matveynator.ru/chicha/latest/)
+- #### [↓ Download latest version of CHICHA.](http://files.matveynator.ru/chicha2/latest/) 
+- #### [↓ Скачать последнюю версию CHICHA.](http://files.matveynator.ru/chicha2/latest/)
 
-- #### Поддерживаемые операционные системы: [Linix](http://files.matveynator.ru/chicha/latest/linux), [Windows](http://files.matveynator.ru/chicha/latest/windows), [Android](http://files.matveynator.ru/chicha/latest/android), [Mac](http://files.matveynator.ru/chicha/latest/mac), [IOS](http://files.matveynator.ru/chicha/latest/ios), [FreeBSD](http://files.matveynator.ru/chicha/latest/freebsd), [DragonflyBSD](http://files.matveynator.ru/chicha/latest/dragonfly), [OpenBSD](http://files.matveynator.ru/chicha/latest/openbsd), [NetBSD](http://files.matveynator.ru/chicha/latest/netbsd), [Plan9](http://files.matveynator.ru/chicha/latest/plan9), [AIX](http://files.matveynator.ru/chicha/latest/aix), [Solaris](http://files.matveynator.ru/chicha/latest/solaris), [Illumos](http://files.matveynator.ru/chicha/latest/illumos)
+> Поддерживаемые операционные системы: [Linix](http://files.matveynator.ru/chicha2/latest/linux), [Windows](http://files.matveynator.ru/chicha2/latest/windows), [Android](http://files.matveynator.ru/chicha2/latest/android), [Mac](http://files.matveynator.ru/chicha2/latest/mac), [IOS](http://files.matveynator.ru/chicha2/latest/ios), [FreeBSD](http://files.matveynator.ru/chicha2/latest/freebsd), [DragonflyBSD](http://files.matveynator.ru/chicha2/latest/dragonfly), [OpenBSD](http://files.matveynator.ru/chicha2/latest/openbsd), [NetBSD](http://files.matveynator.ru/chicha2/latest/netbsd), [Plan9](http://files.matveynator.ru/chicha2/latest/plan9), [AIX](http://files.matveynator.ru/chicha2/latest/aix), [Solaris](http://files.matveynator.ru/chicha2/latest/solaris), [Illumos](http://files.matveynator.ru/chicha2/latest/illumos)
 
 ### Конфигурационные опции (необязательные):
 ```
