@@ -47,9 +47,7 @@ Usage of chicha:
   -average
     	Calculate average results instead of minimal results.
   -average-duration duration
-    	Duration to calculate average results. Results passed to reader during this duration will be calculated as average result. (default 1s)
-  -collector string
-    	Provide IP address and port to collect and parse data from RFID and timing readers. (default "0.0.0.0:4000")
+    	Duration to calculate average results. Any results provided to the reader within this duration will be computed as the average result. (default 1s)
   -db-path string
     	Provide path to writable directory to store database data. (default ".")
   -db-save-interval duration
@@ -57,7 +55,9 @@ Usage of chicha:
   -db-type string
     	Select db type: sqlite / genji / postgres (default "genji")
   -lap-time duration
-    	Minimal lap time duration. Results smaller than this duration would be considered wrong. (default 45s)
+    	Minimal lap time duration refers to the shortest acceptable time for a lap, and any lap time result that falls below this duration would be deemed inaccurate. (default 45s)
+  -listener string
+    	Please specify the IP address and port number on which the incoming RFID handler should operate. (default "0.0.0.0:4000")
   -pg-db-name string
     	PostgreSQL DB name. (default "chicha")
   -pg-host string
@@ -71,7 +71,7 @@ Usage of chicha:
   -pg-user string
     	PostgreSQL DB user. (default "postgres")
   -proxy string
-    	Proxy incoming data to another chicha collector. For example: -proxy '10.9.8.7:4000'.
+    	Proxy incoming data to another chicha listener. For example: -proxy '10.9.8.7:4000'.
   -race-type string
     	Valid race calculation variants are: 'delayed-start' or 'mass-start'. 1. 'mass-start': start time is not taken into account as everybody starts at the same time, the first gate passage is equal to the short lap, positions are counted based on the minimum time to complete maximum number of laps/stages/gates including the short lap. 2. 'delayed-start': start time is taken into account as everyone starts with some time delay, the first gate passage (short lap) is equal to the start time, positions are counted based on the minimum time to complete maximum number of laps/stages/gates excluding short lap. (default "mass-start")
   -timeout duration
@@ -81,5 +81,5 @@ Usage of chicha:
   -version
     	Output version information
   -web string
-    	Provide IP address and port to listen for HTTP connections from clients. (default "0.0.0.0:80")
+    	Please specify the IP address and port number on which HTTP web interface will be running. (default "0.0.0.0:80")
 ```
