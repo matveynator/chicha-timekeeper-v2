@@ -333,9 +333,9 @@ func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Confi
 }
 
 
-// Функция которая отсортирует слайс и для всех одинаковых RaceId для всех LapNumber больше нуля выберет минимальное поле LapTime и поставит для него FastestLapInThisRace true а всем остальным из одинаковых RaceId и LapNumber больше нуля поставит FastestLapInThisRace false
-func sortAndMarkFastestLaps(laps []Data.Lap) {
-	// Сортируем слайс по RaceId и LapNumber
+// Функция которая отсортирует слайс и для каждой уникальной группы данных с определенным RaceId выберет все LapNumber больше нуля и выберет среди них минимальное  значение поле LapTime и поставит для этой структуры FastestLapInThisRace true, а всем остальным  из тойже группы одинаковых RaceId поставит FastestLapInThisRace false
+func setFastestLapInEachRace(laps []Data.Lap) {
+	// Сортировка по RaceId и LapNumber
 	sort.Slice(laps, func(i, j int) bool {
 		if laps[i].RaceId == laps[j].RaceId {
 			return laps[i].LapNumber < laps[j].LapNumber
@@ -343,43 +343,45 @@ func sortAndMarkFastestLaps(laps []Data.Lap) {
 		return laps[i].RaceId < laps[j].RaceId
 	})
 
-	// Идем по слайсу, проверяем, есть ли LapNumber больше нуля для текущего RaceId,
-	// если есть, то находим минимальное значение LapTime, и устанавливаем для него FastestLapInThisRace=true,
-	// а остальным с тем же RaceId и LapNumber FastestLapInThisRace=false.
-	var prevRaceId uint
-	var prevLapNumber uint
-	var fastestLapTime int64
-	for i, lap := range laps {
-		if lap.RaceId != prevRaceId || lap.LapNumber != prevLapNumber {
-			if fastestLapTime > 0 {
-				// Устанавливаем FastestLapInThisRace=true для лучшего круга в предыдущей гонке
-				for j := i - 1; j >= 0 && laps[j].RaceId == prevRaceId && laps[j].LapNumber == prevLapNumber; j-- {
-					if laps[j].LapTime == fastestLapTime {
-						laps[j].FastestLapInThisRace = true
-					} else {
-						laps[j].FastestLapInThisRace = false
-					}
-				}
-			}
-			fastestLapTime = lap.LapTime
-		} else if lap.LapTime < fastestLapTime {
-			fastestLapTime = lap.LapTime
+	var currentRaceId uint
+	var currentGroup []Data.Lap
+	for _, lap := range laps {
+		// Если это новая группа, обрабатываем предыдущую
+		if lap.RaceId != currentRaceId {
+			setFastestLapInGroup(currentGroup)
+			currentRaceId = lap.RaceId
+			currentGroup = []Data.Lap{}
 		}
-		prevRaceId = lap.RaceId
-		prevLapNumber = lap.LapNumber
+		currentGroup = append(currentGroup, lap)
 	}
+	// Обработка последней группы
+	setFastestLapInGroup(currentGroup)
+}
 
-	// Обработка последней гонки
-	if fastestLapTime > 0 {
-		for j := len(laps) - 1; j >= 0 && laps[j].RaceId == prevRaceId && laps[j].LapNumber == prevLapNumber; j-- {
-			if laps[j].LapTime == fastestLapTime {
-				laps[j].FastestLapInThisRace = true
+// setFastestLapInGroup устанавливает поле FastestLapInThisRace
+// для группы laps в соответствии с условиями
+func setFastestLapInGroup(laps []Data.Lap) {
+	// Создаем карту для хранения минимального LapTime для каждого LapNumber
+	minLapTimes := make(map[uint]int64)
+	for _, lap := range laps {
+		if lap.LapNumber > 0 {
+			if lapTime, ok := minLapTimes[lap.LapNumber]; !ok || lap.LapTime < lapTime {
+				minLapTimes[lap.LapNumber] = lap.LapTime
+			}
+		}
+	}
+	// Устанавливаем поле FastestLapInThisRace в соответствии с найденным минимальным LapTime
+	for _, lap := range laps {
+		if lap.LapNumber > 0 {
+			if lap.LapTime == minLapTimes[lap.LapNumber] {
+				lap.FastestLapInThisRace = true
 			} else {
-				laps[j].FastestLapInThisRace = false
+				lap.FastestLapInThisRace = false
 			}
 		}
 	}
 }
+
 
 //  Подсчитываем мое лучшее время круга:
 func calculateMyBestLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap) (bestLapTime int64, bestLapNumber uint, err error) {
@@ -732,7 +734,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// 8. Calculate fastest lap in this race BEGIN:
 	if config.VARIABLE_DISTANCE_RACE == false {
-		sortAndMarkFastestLaps(currentLaps)
+		setFastestLapInEachRace(currentLaps)
 	}
 	// END.
 
