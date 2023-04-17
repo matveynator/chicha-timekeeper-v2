@@ -9,6 +9,7 @@ import (
 )
 
 // Plan:
+
 //currentLap.Id = +
 //currentLap.TagId = +
 //currentLap.DiscoveryMinimalUnixTime = +
@@ -29,8 +30,12 @@ import (
 // Если гонка не VARIABLE_DISTANCE_RACE (false):
 //currentLap.FasterOrSlowerThanPreviousLapTime = +
 //currentLap.LapIsStrange = +
-//currentLap.BestLapTime = ?
-//currentLap.BestLapNumber = ?
+//currentLap.BestLapTime = +
+//currentLap.BestLapNumber = +
+//currentLap.FastestLapInThisRace = +
+
+
+
 
 // getCurrentRaceId returns the race ID of the current lap based on previous laps.
 // If there are no previous laps, the race ID will be set to 1.
@@ -328,6 +333,82 @@ func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Confi
 }
 
 
+// Функция которая отсортирует слайс и для всех одинаковых RaceId для всех LapNumber больше нуля выберет минимальное поле LapTime и поставит для него FastestLapInThisRace true а всем остальным из одинаковых RaceId и LapNumber больше нуля поставит FastestLapInThisRace false
+func sortAndMarkFastestLaps(laps []Data.Lap) {
+	// Сортируем слайс по RaceId и LapNumber
+	sort.Slice(laps, func(i, j int) bool {
+		if laps[i].RaceId == laps[j].RaceId {
+			return laps[i].LapNumber < laps[j].LapNumber
+		}
+		return laps[i].RaceId < laps[j].RaceId
+	})
+
+	// Идем по слайсу, проверяем, есть ли LapNumber больше нуля для текущего RaceId,
+	// если есть, то находим минимальное значение LapTime, и устанавливаем для него FastestLapInThisRace=true,
+	// а остальным с тем же RaceId и LapNumber FastestLapInThisRace=false.
+	var prevRaceId uint
+	var prevLapNumber uint
+	var fastestLapTime int64
+	for i, lap := range laps {
+		if lap.RaceId != prevRaceId || lap.LapNumber != prevLapNumber {
+			if fastestLapTime > 0 {
+				// Устанавливаем FastestLapInThisRace=true для лучшего круга в предыдущей гонке
+				for j := i - 1; j >= 0 && laps[j].RaceId == prevRaceId && laps[j].LapNumber == prevLapNumber; j-- {
+					if laps[j].LapTime == fastestLapTime {
+						laps[j].FastestLapInThisRace = true
+					} else {
+						laps[j].FastestLapInThisRace = false
+					}
+				}
+			}
+			fastestLapTime = lap.LapTime
+		} else if lap.LapTime < fastestLapTime {
+			fastestLapTime = lap.LapTime
+		}
+		prevRaceId = lap.RaceId
+		prevLapNumber = lap.LapNumber
+	}
+
+	// Обработка последней гонки
+	if fastestLapTime > 0 {
+		for j := len(laps) - 1; j >= 0 && laps[j].RaceId == prevRaceId && laps[j].LapNumber == prevLapNumber; j-- {
+			if laps[j].LapTime == fastestLapTime {
+				laps[j].FastestLapInThisRace = true
+			} else {
+				laps[j].FastestLapInThisRace = false
+			}
+		}
+	}
+}
+
+//  Подсчитываем мое лучшее время круга:
+func calculateMyBestLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap) (bestLapTime int64, bestLapNumber uint, err error) {
+	if	currentLap.LapNumber == 0 {
+		bestLapTime = 0
+		bestLapNumber = 0
+	} else if currentLap.LapNumber == 1 {
+		bestLapTime = currentLap.LapTime
+		bestLapNumber = 1
+	} else {
+		// Make a selection that includes only the complete laps that belong to me:
+		var mySameRaceFullLaps []Data.Lap
+		for _, otherOldLap := range otherOldLaps {
+			if otherOldLap.RaceId == currentLap.RaceId &&  otherOldLap.TagId == currentLap.TagId && otherOldLap.LapNumber > 0  {
+				mySameRaceFullLaps = append(mySameRaceFullLaps, otherOldLap)
+			}
+		}
+		mySameRaceFullLaps = append(mySameRaceFullLaps, currentLap)
+
+		// Sort by lap time ascending small->big :
+		sortLapsAscLapTime(mySameRaceFullLaps)
+
+		// Assign fastest lap to bestLapTime and bestLapNumber:
+		bestLapTime = mySameRaceFullLaps[0].LapTime
+		bestLapNumber = mySameRaceFullLaps[0].LapNumber
+	}
+	return
+}
+
 // Сортировка по максимальному LapNumber и минимальному RaceTotalTime:
 func sortMaxLapNumberAndMinRaceTotalTime(laps []Data.Lap) []Data.Lap {
 	sort.Slice(laps, func(i, j int) bool {
@@ -367,6 +448,13 @@ func containsTagId(laps []Data.Lap, tagId string) bool {
 }
 
 
+// Sort slice by lap time ascending (small -> big):
+func sortLapsAscLapTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		return lapsToSort[i].LapTime < lapsToSort[j].LapTime
+	})
+}
+
 // Sort slice by race total time descending (big -> small):
 func sortLapsDescByRaceTotalTime (lapsToSort []Data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
@@ -374,7 +462,7 @@ func sortLapsDescByRaceTotalTime (lapsToSort []Data.Lap) {
 	})
 }
 
-// Sort slice by race total time ascending (big -> small):
+// Sort slice by race total time ascending (small -> big):
 func sortLapsAscByRaceTotalTime (lapsToSort []Data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
 		return lapsToSort[i].RaceTotalTime < lapsToSort[j].RaceTotalTime
@@ -528,6 +616,17 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	} 
 	// END.
 
+
+	// Calculate my BestLapTime and BestLapNumber BEGIN:
+	if config.VARIABLE_DISTANCE_RACE == false {
+		currentLap.BestLapTime, currentLap.BestLapNumber, err = calculateMyBestLapTime(currentLap, otherOldLaps)
+		if err != nil {
+			log.Printf("calculateMyBestLapTime error: %s \n", err)
+			return
+		}
+	}
+	// END.
+
 	// Calculate RaceTotalTime BEGIN:
 	// For zero lap RaceTotalTime equals LapTime:
 	if currentLap.LapNumber == 0 {
@@ -631,9 +730,16 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	// End.
 
 
+	// 8. Calculate fastest lap in this race BEGIN:
+	if config.VARIABLE_DISTANCE_RACE == false {
+		sortAndMarkFastestLaps(currentLaps)
+	}
+	// END.
+
+
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d LapIsStrange=%t\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d LapIsStrange=%t BestLapTime=%d, BestLapNumber=%d, FastestLapInThisRace=%t\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange, lap.BestLapTime, lap.BestLapNumber, lap.FastestLapInThisRace)
 	}
 
 	// 8. Return currentLaps slice or error.

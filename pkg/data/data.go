@@ -36,8 +36,9 @@ type Lap struct {
 
 	BestLapTime                 int64
 	BestLapNumber               uint
+	FastestLapInThisRace				bool
 	FasterOrSlowerThanPreviousLapTime int64
-	LapIsStrange                 bool
+	LapIsStrange                bool
 }
 
 
