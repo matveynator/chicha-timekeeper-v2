@@ -335,43 +335,63 @@ func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Confi
 
 
 // Функция которая отсортирует слайс и для каждой уникальной группы данных с определенным RaceId выберет все LapNumber больше нуля и выберет среди них минимальное  значение поле LapTime и поставит для этой структуры FastestLapInThisRace true, а всем остальным  из тойже группы одинаковых RaceId поставит FastestLapInThisRace false
-func updateFastestLap(laps []Data.Lap) {
-	// Сортировка по RaceId и LapNumber
-	sort.Slice(laps, func(i, j int) bool {
-		if laps[i].RaceId == laps[j].RaceId {
-			return laps[i].LapNumber < laps[j].LapNumber
+func setFastestLaps(laps []Data.Lap) {
+
+	type UniqueRaceId struct {
+		RaceId 	uint
+		LapId  	int64
+		LapTime int64
+	}
+
+  uniqueRaceIds := make([]UniqueRaceId, 0)
+
+	// Мапа для хранения уникальных RaceId
+	raceIdsMap := make(map[uint]bool)
+
+	// Итерируемся по всем структурам Lap и выбираем уникальные RaceId
+	for _, lap := range laps {
+		if _, ok := raceIdsMap[lap.RaceId]; !ok {
+			raceIdsMap[lap.RaceId] = true
+			uniqueRaceIds = append(uniqueRaceIds, UniqueRaceId{
+				RaceId:  lap.RaceId,
+				LapId:   0,
+				LapTime: math.MaxInt64,
+			})
 		}
-		return laps[i].RaceId < laps[j].RaceId
-	})
+	}
+	// Update uniqueRaceIds slice with LapTime to maximum int64 value available:
+	//for uniqueRaceIdIndex, _ := range uniqueRaceIds{
+	//	uniqueRaceIds[uniqueRaceIdIndex].LapTime = math.MaxInt64
+	//}
 
-	// Переменная для хранения предыдущего RaceId
-	prevRaceId := uint(0)
+	// Update uniqueRaceIds slice with fastest LapId and LapTime:
+	for lapIndex, lap := range laps {
 
-	// Переменная для хранения минимального LapTime в каждой группе
-	minLapTime := int64(0)
+		// Unset all laps FastestLapInThisRace value globally:
+		laps[lapIndex].FastestLapInThisRace = false
 
-	for i, lap := range laps {
-		if lap.RaceId != prevRaceId {
-			// Новая группа данных, обновляем minLapTime
-			prevRaceId = lap.RaceId
-			minLapTime = math.MaxInt64
+		// Update uniqueRaceIds slice with fastest laps in it:
+		for uniqueRaceIdIndex, uniqueRaceId := range uniqueRaceIds{
+			if lap.LapNumber > 0 && lap.RaceId == uniqueRaceId.RaceId {
+				if lap.LapTime < uniqueRaceId.LapTime {
+						uniqueRaceIds[uniqueRaceIdIndex].LapId = lap.Id
+						uniqueRaceIds[uniqueRaceIdIndex].LapTime = lap.LapTime
+				}
+			}
 		}
+	}
 
-		if lap.LapNumber > 0 && lap.LapTime < minLapTime {
-			// Найден новый минимум LapTime в текущей группе
-			minLapTime = lap.LapTime
-
-			// Установка значения FastestLapInThisRace для текущей структуры
-			laps[i].FastestLapInThisRace = true
-
-			// Установка значения FastestLapInThisRace для предыдущих структур в этой группе
-			for j := i - 1; j >= 0 && laps[j].RaceId == lap.RaceId; j-- {
-				laps[j].FastestLapInThisRace = false
+	// Update fastest laps in each race and set FastestLapInThisRace = true:
+	for lapIndex, lap := range laps {
+		if lap.LapNumber > 0 {
+			for _, uniqueRaceId := range uniqueRaceIds{
+				if lap.Id == uniqueRaceId.LapId {
+					laps[lapIndex].FastestLapInThisRace = true
+				}
 			}
 		}
 	}
 }
-
 
 //  Подсчитываем мое лучшее время круга:
 func calculateMyBestLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap) (bestLapTime int64, bestLapNumber uint, err error) {
@@ -416,7 +436,7 @@ func sortMaxLapNumberAndMinRaceTotalTime(laps []Data.Lap) []Data.Lap {
 }
 
 // Calculate next Id:
-func getNextId (laps []Data.Lap) (id int64) {
+func getNextLapId (laps []Data.Lap) (id int64) {
 	// Set initial Id:
 	id = 0
 	// Search for highest Id:
@@ -427,6 +447,38 @@ func getNextId (laps []Data.Lap) (id int64) {
 	}
 	// Return next Id:
 	return id + 1
+}
+
+func calculateLapId(currentLap Data.Lap, laps []Data.Lap) (id int64) {
+	if len(laps) > 0 {
+		var lapFound bool = false
+		for _, lap := range laps {
+			if currentLap.TagId == lap.TagId && currentLap.RaceId == lap.RaceId && currentLap.LapNumber == lap.LapNumber {
+				lapFound = true
+				if lap.Id > 0 {
+					return lap.Id
+				} else {
+					id = 1
+				}
+			}
+		}
+
+		// If no such lap in previous data - calculate next lap id:
+		if lapFound == false {
+			var lapId int64 = 0
+			for _, lap := range laps {
+				if lap.Id > lapId {
+					lapId = lap.Id
+				}
+			}
+			id = lapId+1
+		}
+	} else {
+		// If no previous data (this is the first lap) - return first id:
+		id = 1
+	}
+
+	return
 }
 
 // Check slice contains TagID:
@@ -550,7 +602,11 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 	}
 
 
-	// 5. Calculate Id, DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates BEGIN:.
+	// Calculate Lap.Id START:
+	currentLap.Id = calculateLapId(currentLap, previousLaps)
+	// END.
+
+	// 5. Calculate DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates BEGIN:.
 	// Create slice copy with data from old laps not related to current lap BEGIN:
 	var otherOldLaps []Data.Lap
 	// Create slice copy with data from old laps not related to current lap END.
@@ -575,17 +631,6 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 				previousLap.AverageResultsCount = 1
 			} 
 			currentLap.AverageResultsCount = previousLap.AverageResultsCount + 1
-			// END.
-
-
-			// Calculate Lap.Id BEGIN:
-			if previousLap.Id > 0 {
-				// Set old Id if available:
-				currentLap.Id = previousLap.Id
-			} else {
-				// Calculate next Lap.Id if no old data available:
-				currentLap.Id = getNextId (previousLaps)
-			}
 			// END.
 		}
 
@@ -724,7 +769,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// 8. Calculate fastest lap in this race BEGIN:
 	if config.VARIABLE_DISTANCE_RACE == false {
-		updateFastestLap(currentLaps)
+		setFastestLaps(currentLaps)
 	}
 	// END.
 
