@@ -83,7 +83,7 @@ func processConnection(connection net.Conn, config Config.Settings) {
 		Timekeeper.TimekeeperTask <- rawData
 
 		//create a database task:
-		Database.DatabaseTask <- rawData
+		Database.DatabaseRawTask <- rawData
 
 	}
 }
