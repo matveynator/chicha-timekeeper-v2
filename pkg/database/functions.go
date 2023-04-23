@@ -103,7 +103,11 @@ func connectToDb(config Config.Settings)(db *sql.DB, err error) {
 
 func createTables(db *sql.DB, config Config.Settings) (err error) {
 
-	_, err = db.Exec("CREATE TABLE if not exists DBWatchDog(Id INT PRIMARY KEY, UnixTime INT)")
+	_, err = db.Exec(`CREATE TABLE if not exists DBWatchDog(
+		Id INT PRIMARY KEY, 
+		UnixTime INT
+	)`)
+
 	if err != nil {
 		return
 	} else {
@@ -121,17 +125,76 @@ func createTables(db *sql.DB, config Config.Settings) (err error) {
 		}
 	}
 
-	_, err = db.Exec("CREATE TABLE if not exists Lap(Id INT PRIMARY KEY, SportsmanId INT DEFAULT 0, TagId TEXT, DiscoveryMinimalUnixTime INT DEFAULT 0, DiscoveryAverageUnixTime INT DEFAULT 0, UpdatedAt INT DEFAULT 0, RaceId INT DEFAULT 0, PracticeId INT DEFAULT 0, RacePosition INT DEFAULT 0, TimeBehindTheLeader INT DEFAULT 0, LapNumber INT DEFAULT 0, LapTime INT DEFAULT 0, LapPosition INT DEFAULT 0, LapIsCurrent BOOL DEFAULT FALSE, LapIsStrange BOOL DEFAULT FALSE, RaceFinished BOOL DEFAULT FALSE, BestLapTime INT DEFAULT 0, BestLapNumber INT DEFAULT 0, BestLapPosition INT DEFAULT 0, RaceTotalTime INT DEFAULT 0, BetterOrWorseLapTime INT DEFAULT 0, UNIQUE(Id))")
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Lap (
+		Id INTEGER PRIMARY KEY,
+		SportsmanId TEXT,
+		TagId TEXT,
+		DiscoveryMinimalUnixTime INTEGER,
+		DiscoveryMaximalUnixTime INTEGER,
+		DiscoveryAverageUnixTime INTEGER,
+		AverageResultsCount INTEGER,
+		RaceId INTEGER,
+		RacePosition INTEGER,
+		RaceTotalTime INTEGER,
+		RaceFinished BOOLEAN,
+		LapNumber INTEGER,
+		LapTime INTEGER,
+		LapPosition INTEGER,
+		TimeBehindTheLeader INTEGER,
+		LapIsLatest BOOLEAN,
+		BestLapTime INTEGER,
+		BestLapNumber INTEGER,
+		FastestLapInThisRace BOOLEAN,
+		FasterOrSlowerThanPreviousLapTime INTEGER,
+		LapIsStrange BOOLEAN
+	)`)
+
 	if err != nil {
 		return
 	}
 
-	_, err = db.Exec("CREATE TABLE if not exists RawData(Id INT NOT NULL, TagId TEXT, DiscoveryUnixTime INT,  ReaderIP TEXT, Antenna INT, ProxyIP TEXT, PRIMARY KEY(Id))")
+	_, err = db.Exec(`CREATE TABLE if not exists RawData(
+		Id INT NOT NULL, 
+		TagId TEXT, 
+		DiscoveryUnixTime INT,  
+		ReaderIP TEXT, 
+		Antenna INT, 
+		ProxyIP TEXT, 
+		PRIMARY KEY(Id)
+		)`)
+
 	if err != nil {
 		return
 	}
 
 	return
+}
+
+// Функция для сохранения данных кругов из памяти в базу данных:
+func InsertLapDataInDB (databaseConnection *sql.DB, lap Data.Lap) (err error) {
+
+	// Проверяем, есть ли в базе данных запись с таким же Id
+	var count int
+	err = databaseConnection.QueryRow("SELECT COUNT(*) FROM Laps WHERE Id = ?", lap.Id).Scan(&count)
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		// Если запись не найдена, создаем новую
+		_, err = databaseConnection.Exec("INSERT INTO Laps (Id, SportsmanId, TagId, DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount, RaceId, RacePosition, RaceTotalTime, RaceFinished, LapNumber, LapTime, LapPosition, TimeBehindTheLeader, LapIsLatest, BestLapTime, BestLapNumber, FastestLapInThisRace, FasterOrSlowerThanPreviousLapTime, LapIsStrange) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", lap.Id, lap.SportsmanId, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.RacePosition, lap.RaceTotalTime, lap.RaceFinished, lap.LapNumber, lap.LapTime, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.BestLapTime, lap.BestLapNumber, lap.FastestLapInThisRace, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Если запись найдена, обновляем ее
+		_, err = databaseConnection.Exec("UPDATE Laps SET SportsmanId = ?, TagId = ?, DiscoveryMinimalUnixTime = ?, DiscoveryAverageUnixTime = ?, AverageResultsCount = ?, RaceId = ?, RacePosition = ?, RaceTotalTime = ?, RaceFinished = ?, LapNumber = ?, LapTime = ?, LapPosition = ?, TimeBehindTheLeader = ?, LapIsLatest = ?, BestLapTime = ?, BestLapNumber = ?, FastestLapInThisRace = ?, FasterOrSlowerThanPreviousLapTime = ?, LapIsStrange = ? WHERE Id = ?", lap.SportsmanId, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.RacePosition, lap.RaceTotalTime, lap.RaceFinished, lap.LapNumber, lap.LapTime, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.BestLapTime, lap.BestLapNumber, lap.FastestLapInThisRace, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange, lap.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 
@@ -142,7 +205,9 @@ func InsertRawDataInDB (databaseConnection *sql.DB, rawData Data.RawData) (id in
 	} else {
 		id++
 	}
-
 	_, err = databaseConnection.Exec("INSERT INTO RawData(Id,TagId,DiscoveryUnixTime,ReaderIP,Antenna,ProxyIP) VALUES (?, ?, ?, ?, ?, ?)", id, rawData.TagId, rawData.DiscoveryUnixTime, rawData.ReaderIP, rawData.Antenna, rawData.ProxyIP)
 	return
 }
+
+
+

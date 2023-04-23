@@ -95,8 +95,34 @@ func databaseWorkerRun(workerId int, config Config.Settings ) {
 
 	for {
 		select {
-			//в случае если есть задание в канале DatabaseSaveRawTask
-		case <- DatabaseSaveRawTask :
+
+      //в случае если есть задание в канале DatabaseSaveRawTask
+    case <- DatabaseSaveLapTask :
+      //sleep some time to calm down disk operations:
+      time.Sleep(config.DB_SAVE_INTERVAL_DURATION)
+      //пробежать во всем доступным данным в канале заданий для бд и сохранить их в базе данных:
+      for currentDatabaseSaveLapTask := range DatabaseSaveLapTask {
+        err := InsertLapDataInDB(dbConnection, currentDatabaseSaveLapTask)
+        if err != nil {
+          //skip busy SQLITE database errors:
+          if strings.Contains(err.Error(), "database is locked (5) (SQLITE_BUSY)") {
+            log.Println("Saving data to disk notice: Database is busy - sleeping to calm down operations.")
+            //return task to channel (this may lead to raw data id misorder in database):
+            DatabaseSaveLapTask <- currentDatabaseSaveLapTask
+            //sleep some time to calm down disk operations:
+            time.Sleep(config.DB_SAVE_INTERVAL_DURATION)
+          }  else {
+            //return task to channel (this may lead to raw data id misorder in database):
+            DatabaseSaveLapTask <- currentDatabaseSaveLapTask
+
+            log.Printf("Database worker %d exited due to critical processing error: %s\n", workerId, err)
+            return
+          }
+        }
+      }
+
+      //в случае если есть задание в канале DatabaseSaveRawTask
+    case <- DatabaseSaveRawTask :
 			//sleep some time to calm down disk operations:
 			time.Sleep(config.DB_SAVE_INTERVAL_DURATION)
 			//пробежать во всем доступным данным в канале заданий для бд и сохранить их в базе данных:
@@ -126,6 +152,7 @@ func databaseWorkerRun(workerId int, config Config.Settings ) {
 			return
 		default:
 			//set non blocking case
+			time.Sleep(config.DB_SAVE_INTERVAL_DURATION)
 		}
 	}
 }
