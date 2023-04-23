@@ -21,6 +21,7 @@ type Lap struct {
 	SportsmanId                 string
 	TagId                       string
 	DiscoveryMinimalUnixTime    int64
+	DiscoveryMaximalUnixTime    int64
 	DiscoveryAverageUnixTime    int64
 	AverageResultsCount					uint
 	RaceId                      uint

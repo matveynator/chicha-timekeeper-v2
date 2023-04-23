@@ -14,6 +14,7 @@ import (
 //currentLap.Id = +
 //currentLap.TagId = +
 //currentLap.DiscoveryMinimalUnixTime = +
+//currentLap.DiscoveryMaximalUnixTime = +
 //currentLap.DiscoveryAverageUnixTime = +
 //currentLap.AverageResultsCount = +
 
@@ -527,6 +528,13 @@ func sortLapsAscByDiscoveryAverageUnixTime (lapsToSort []Data.Lap) {
 	})
 }
 
+// Sort slice by discovery maximal unix time descending (big -> small):
+func sortLapsDescByDiscoveryMaximalUnixTime (lapsToSort []Data.Lap) {
+	sort.Slice(lapsToSort, func(i, j int) bool {
+		return lapsToSort[i].DiscoveryMaximalUnixTime > lapsToSort[j].DiscoveryMaximalUnixTime
+	})
+}
+
 
 // Sort slice by discovery minimal unix time descending (big -> small):
 func sortLapsDescByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
@@ -583,7 +591,9 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		// 2. Set well known data receved from rfid (currentLap.TagId, currentLap.DiscoveryMinimalUnixTime, currentLap.DiscoveryAverageUnixTime):
 		currentLap.TagId = currentTimekeeperTask.TagId
 		currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
+		currentLap.DiscoveryMaximalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
 		currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
+
 
 		// 3. Calculate currentRaceId:
 		previousLapsCopy := previousLaps
@@ -616,14 +626,21 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		// Rewrite my lap data in memory with updated new data (DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount) removing duplicates BEGIN:
 		if currentLap.TagId == previousLap.TagId && currentLap.RaceId == previousLap.RaceId && currentLap.LapNumber == previousLap.LapNumber {
 
+
 			// Calculate DiscoveryMinimalUnixTime BEGIN:
 			if currentLap.DiscoveryMinimalUnixTime > previousLap.DiscoveryMinimalUnixTime {
 				currentLap.DiscoveryMinimalUnixTime = previousLap.DiscoveryMinimalUnixTime
+			} 
+			// END.
+
+			// Calculate DiscoveryMaximalUnixTime BEGIN:
+			if currentLap.DiscoveryMaximalUnixTime < previousLap.DiscoveryMaximalUnixTime {
+				currentLap.DiscoveryMaximalUnixTime = previousLap.DiscoveryMinimalUnixTime
 			}
 			// END.
 
 			// Calculate DiscoveryAverageUnixTime BEGIN:
-			currentLap.DiscoveryAverageUnixTime = (currentLap.DiscoveryAverageUnixTime + previousLap.DiscoveryAverageUnixTime)/2
+			currentLap.DiscoveryAverageUnixTime = (currentTimekeeperTask.DiscoveryUnixTime + previousLap.DiscoveryAverageUnixTime)/2
 			// END.
 
 			// Calculate AverageResultsCount BEGIN:
@@ -776,7 +793,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 
 	// X. Echo results before return:
 	for _, lap := range currentLaps {
-		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d LapIsStrange=%t BestLapTime=%d, BestLapNumber=%d, FastestLapInThisRace=%t\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange, lap.BestLapTime, lap.BestLapNumber, lap.FastestLapInThisRace)
+		log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryMaximalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d LapIsStrange=%t BestLapTime=%d, BestLapNumber=%d, FastestLapInThisRace=%t\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryMaximalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange, lap.BestLapTime, lap.BestLapNumber, lap.FastestLapInThisRace)
 	}
 
 	// 8. Return currentLaps slice or error.
