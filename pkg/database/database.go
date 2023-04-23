@@ -102,7 +102,7 @@ func databaseWorkerRun(workerId int, config Config.Settings ) {
       time.Sleep(config.DB_SAVE_INTERVAL_DURATION)
       //пробежать во всем доступным данным в канале заданий для бд и сохранить их в базе данных:
       for currentDatabaseSaveLapTask := range DatabaseSaveLapTask {
-        err := InsertLapDataInDB(dbConnection, currentDatabaseSaveLapTask)
+        err := SaveLapDataInDB(dbConnection, currentDatabaseSaveLapTask)
         if err != nil {
           //skip busy SQLITE database errors:
           if strings.Contains(err.Error(), "database is locked (5) (SQLITE_BUSY)") {
@@ -127,7 +127,7 @@ func databaseWorkerRun(workerId int, config Config.Settings ) {
 			time.Sleep(config.DB_SAVE_INTERVAL_DURATION)
 			//пробежать во всем доступным данным в канале заданий для бд и сохранить их в базе данных:
 			for currentDatabaseSaveRawTask := range DatabaseSaveRawTask {
-				_, err := InsertRawDataInDB(dbConnection, currentDatabaseSaveRawTask)
+				err := SaveRawDataInDB(dbConnection, currentDatabaseSaveRawTask)
 				if err != nil {
 					//skip busy SQLITE database errors:
 					if strings.Contains(err.Error(), "database is locked (5) (SQLITE_BUSY)") {

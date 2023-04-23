@@ -171,7 +171,7 @@ func createTables(db *sql.DB, config Config.Settings) (err error) {
 }
 
 // Функция для сохранения данных кругов из памяти в базу данных:
-func InsertLapDataInDB (databaseConnection *sql.DB, lap Data.Lap) (err error) {
+func SaveLapDataInDB (databaseConnection *sql.DB, lap Data.Lap) (err error) {
 
 	// Проверяем, есть ли в базе данных запись с таким же Id
 	var count int
@@ -198,7 +198,8 @@ func InsertLapDataInDB (databaseConnection *sql.DB, lap Data.Lap) (err error) {
 }
 
 
-func InsertRawDataInDB (databaseConnection *sql.DB, rawData Data.RawData) (id int64, err error) {
+func SaveRawDataInDB (databaseConnection *sql.DB, rawData Data.RawData) (err error) {
+	var id int
 	err = databaseConnection.QueryRow("SELECT Id FROM RawData order by Id desc limit 1").Scan(&id)
 	if err != nil {
 		id=1
