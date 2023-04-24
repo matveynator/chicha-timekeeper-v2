@@ -5,6 +5,7 @@ import (
 
 	"chicha/pkg/data"
 	"chicha/pkg/config"
+	"chicha/pkg/database"
 
 )
 
@@ -43,6 +44,17 @@ func timekeeperWorkerRun(config Config.Settings) (err error) {
 		select {
 			//в случае если есть задание в канале TimekeeperTask
 		case currentTimekeeperTask := <- TimekeeperTask :
+
+			// If this is the first race data - check database if any previous race data availabe?
+			if len(CurrentLaps) == 0 {
+
+				// Request to get recent race laps if awailable in database (blocking!):
+				Database.RequestRecentRaceLapsChan <- currentTimekeeperTask
+				// Wait for an answer (blocking!)
+				CurrentLaps = <- Database.ReplyWithRecentRaceLapsChan
+
+			} 
+
 			CurrentLaps, err = calculateRaceInMemory(currentTimekeeperTask, CurrentLaps, config)
 			if err != nil {
 				log.Println("Timekeeper fatal error: ", err)
@@ -50,6 +62,7 @@ func timekeeperWorkerRun(config Config.Settings) (err error) {
 			}	else {
 				log.Println("laps capacity =", len(CurrentLaps))
 			}
+
 		}
 	}
 }

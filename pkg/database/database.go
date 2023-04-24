@@ -19,6 +19,10 @@ var DatabaseSaveRawTask chan Data.RawData
 // Saving laps data to database
 var DatabaseSaveLapTask chan Data.Lap
 
+// Recent race laps channels:
+var RequestRecentRaceLapsChan chan Data.RawData
+var ReplyWithRecentRaceLapsChan chan []Data.Lap
+
 var respawnLock chan int
 //по умолчанию оставляем только один процесс который будет брать задачи и записывать их в базу данных
 var databaseWorkersMaxCount int = 1
@@ -27,6 +31,13 @@ func Run(config Config.Settings) {
 
 	//initialise channel with 1000000 tasks capacity:
 	DatabaseSaveRawTask = make(chan Data.RawData, 1000000)
+
+	//initialise channel with 1000000 tasks capacity:
+	DatabaseSaveLapTask = make(chan Data.Lap, 1000000)
+
+	//Initialise recent race laps non buffered (blocking) channels:
+	RequestRecentRaceLapsChan = make(chan Data.RawData)
+	ReplyWithRecentRaceLapsChan = make(chan []Data.Lap)
 
 	//initialize unblocking channel to guard respawn tasks
 	respawnLock = make(chan int, databaseWorkersMaxCount)
@@ -93,6 +104,10 @@ func databaseWorkerRun(workerId int, config Config.Settings ) {
 		}
 	}()
 
+	// Check if any old data is awailabe in database?
+	go  getLatestRaceDataFromDatabase(dbConnection, config)
+
+	// Run the main logic:
 	for {
 		select {
 

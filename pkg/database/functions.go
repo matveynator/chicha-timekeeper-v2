@@ -161,7 +161,7 @@ func createTables(db *sql.DB, config Config.Settings) (err error) {
 		Antenna INT, 
 		ProxyIP TEXT, 
 		PRIMARY KEY(Id)
-		)`)
+	)`)
 
 	if err != nil {
 		return
@@ -211,4 +211,99 @@ func SaveRawDataInDB (databaseConnection *sql.DB, rawData Data.RawData) (err err
 }
 
 
+func getLatestRaceDataFromDatabase(databaseConnection *sql.DB, config Config.Settings) {
+
+	// Начинаем бесконечный цикл
+	for {
+		// Init variables:
+		var err error
+		var latestRaceLaps []Data.Lap
+		var resultsCount int = 0
+
+		// Блокируемся и ждем когда нам пришлют задание в этот канал:
+		currentTimekeeperTask := <- RequestRecentRaceLapsChan
+
+		// Проверяем, есть ли в базе данных какие нибудь записи?
+		err = databaseConnection.QueryRow("SELECT COUNT(*) FROM Laps").Scan(&resultsCount)
+		if err != nil {
+			log.Printf("Error: SELECT COUNT(*) FROM Laps - %s\n", err) 
+			// отправляем пустой slice в канал так как ничего в бд еще нету:
+			ReplyWithRecentRaceLapsChan <- latestRaceLaps
+			return
+		}
+		// No laps found - return empty latestRaceLaps slice:
+		if resultsCount == 0 || err.Error() == "not found" {
+			// отправляем пустой slice в канал так как ничего в бд еще нету:
+			ReplyWithRecentRaceLapsChan <- latestRaceLaps
+			return
+		} else {
+			// Create an empty latest lap struct:
+			var latestLap Data.Lap
+			// Get latest lap data from database (order by config.AVERAGE_RESULTS setting):
+			if config.AVERAGE_RESULTS {
+				_ = databaseConnection.QueryRow("SELECT DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, RaceId FROM Laps order by DiscoveryAverageUnixTime desc limit 1").Scan(&latestLap.DiscoveryMinimalUnixTime, &latestLap.DiscoveryAverageUnixTime, &latestLap.RaceId)
+			} else {
+				_ = databaseConnection.QueryRow("SELECT DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, RaceId FROM Laps order by DiscoveryMinimalUnixTime desc limit 1").Scan(&latestLap.DiscoveryMinimalUnixTime, &latestLap.DiscoveryAverageUnixTime, &latestLap.RaceId)
+			}
+
+			// Generate location based on timezone:
+			var location *time.Location
+			location, err = time.LoadLocation(config.TIME_ZONE)
+			if err != nil {
+				log.Printf("Error: time.LoadLocation(config.TIME_ZONE) - %s\n", err)
+				// отправляем пустой слайс в канал чтобы разблокировать работу запрашиваюшего:
+				ReplyWithRecentRaceLapsChan <- latestRaceLaps
+				return
+			} 
+
+			// Get latest lap time:
+			var latestLapTime time.Time
+			if config.AVERAGE_RESULTS {
+				latestLapTime = time.UnixMilli(latestLap.DiscoveryAverageUnixTime).In(location)
+			} else {
+				latestLapTime = time.UnixMilli(latestLap.DiscoveryMinimalUnixTime).In(location)
+			}
+
+			// Get current time:
+			currentTime := time.UnixMilli(currentTimekeeperTask.DiscoveryUnixTime).In(location)
+
+
+			// Check if race timeout reached?
+			if currentTime.After(latestLapTime.Add(config.RACE_TIMEOUT_DURATION)) {
+				//Race timeout reached - return empty slice:
+				// отправляем пустой слайс в канал чтобы разблокировать работу запрашиваюшего:
+				ReplyWithRecentRaceLapsChan <- latestRaceLaps
+				return
+			} else {
+				// Выбираем все записи из таблицы с условием RaceId == latestLap.RaceId
+				rows, dbError := databaseConnection.Query("SELECT * FROM Laps WHERE RaceId = ?", latestLap.RaceId)
+				if dbError != nil {
+					log.Printf("Error: (SELECT * FROM Laps WHERE RaceId = ?) - %s\n", dbError)
+					// отправляем пустой слайс в канал чтобы разблокировать работу запрашиваюшего:
+					ReplyWithRecentRaceLapsChan <- latestRaceLaps
+					return
+				}
+
+				// Проходим по всем строкам результата и сканируем значения в структуру Lap.
+				for rows.Next() {
+					var lap Data.Lap
+					rowErr := rows.Scan(&lap.Id, &lap.SportsmanId, &lap.TagId, &lap.DiscoveryMinimalUnixTime, &lap.DiscoveryMaximalUnixTime, &lap.DiscoveryAverageUnixTime, &lap.AverageResultsCount, &lap.RaceId, &lap.RacePosition, &lap.RaceTotalTime, &lap.RaceFinished, &lap.LapNumber, &lap.LapTime, &lap.LapPosition, &lap.TimeBehindTheLeader, &lap.LapIsLatest, &lap.BestLapTime, &lap.BestLapNumber, &lap.FastestLapInThisRace, &lap.FasterOrSlowerThanPreviousLapTime, &lap.LapIsStrange)
+					if rowErr != nil {
+						log.Printf("Error: rows.Scan - %s\n", rowErr)
+					}
+					latestRaceLaps = append(latestRaceLaps, lap)
+				}
+
+				// Все в порядке - возвращаем обратно последние данные по текущей гонке:
+				//ReplyWithRecentRaceLapsChan <- latestRaceLaps
+				//return
+			}
+		}
+		// Все в порядке - возвращаем обратно последние данные по текущей гонке:
+		ReplyWithRecentRaceLapsChan <- latestRaceLaps
+		
+		//возвращаемся в начало бесконечного цикла и снова ждем запрос
+	}
+
+}
 
