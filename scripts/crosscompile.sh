@@ -51,4 +51,4 @@ do
 done
 
 #optional: publish to internet:
-rsync -avP ../binaries/* files@files.matveynator.ru:/home/files/public_html/chicha2/
+rsync -avP ../binaries/* files@files.zabiyaka.net:/home/files/public_html/chicha2/
