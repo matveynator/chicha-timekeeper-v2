@@ -13,13 +13,13 @@ import (
 
 //оставляем только один процесс который будет калькулировать время
 var timekeeperWorkersMaxCount int = 1
-var TimekeeperTask chan Data.RawData
+var TimekeeperRawData chan Data.RawData
 var respawnLock chan int
 
 func Run(config Config.Settings) {
 
 	//initialize channel with tasks:
-	TimekeeperTask = make(chan Data.RawData)
+	TimekeeperRawData = make(chan Data.RawData)
 
 	//initialize unblocking channel to guard respawn tasks
 	respawnLock = make(chan int, timekeeperWorkersMaxCount)
@@ -42,20 +42,20 @@ func timekeeperWorkerRun(config Config.Settings) (err error) {
 
 	for {
 		select {
-			//в случае если есть задание в канале TimekeeperTask
-		case currentTimekeeperTask := <- TimekeeperTask :
+			//в случае если есть задание в канале TimekeeperRawData
+		case currentTimekeeperRawData := <- TimekeeperRawData :
 
 			// If this is the first race data - check database if any previous race data availabe?
 			if len(CurrentLaps) == 0 {
 
 				// Request to get recent race laps if awailable in database (blocking!):
-				Database.RequestRecentRaceLapsChan <- currentTimekeeperTask
+				Database.RequestRecentRaceLapsChan <- currentTimekeeperRawData
 				// Wait for an answer (blocking!)
 				CurrentLaps = <- Database.ReplyWithRecentRaceLapsChan
 
 			} 
 
-			CurrentLaps, err = calculateRaceInMemory(currentTimekeeperTask, CurrentLaps, config)
+			CurrentLaps, err = calculateRaceInMemory(currentTimekeeperRawData, CurrentLaps, config)
 			if err != nil {
 				log.Println("Timekeeper fatal error: ", err)
 				return
