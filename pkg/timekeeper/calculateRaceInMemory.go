@@ -3,9 +3,8 @@ package Timekeeper
 import (
 	"chicha/pkg/config"
 	"chicha/pkg/data"
-  "strings"
-	"log"
 	"fmt"
+	"strings"
 )
 
 // Обрабатывает данные гонки в памяти и возвращает обновленные круги и возможную ошибку.
@@ -16,10 +15,10 @@ func calculateRaceInMemory(currentTimekeeperTask Data.RawData, previousLaps []Da
 	// Проверка валидности текущих данных круга.
 	lapIsValid, err = checkLapIsValid(currentTimekeeperTask, previousLaps, config)
 	if err != nil {
-		log.Printf("Ошибка валидации данных: %s \n", err)
+		fmt.Printf("Ошибка валидации данных: %s \n", err)
 		return
 	} else if !lapIsValid {
-		log.Println("Получены невалидные данные круга. Пропускаем.")
+		fmt.Println("Получены невалидные данные круга. Пропускаем.")
 		updatedLaps = previousLaps
 		return
 	}
@@ -27,21 +26,21 @@ func calculateRaceInMemory(currentTimekeeperTask Data.RawData, previousLaps []Da
 	// Инициализация текущего круга
 	currentLap, err = initializeCurrentLap(currentTimekeeperTask, previousLaps, config)
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		return
 	}
 
 	// Обновление текущего круга на основе предыдущих данных
 	updatedLaps, err = updateCurrentLap(currentLap, previousLaps, currentTimekeeperTask, config)
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		return
 	}
 
 	// Рассчитываем позиции и отставания
 	calculatePositionsAndDelays(updatedLaps, config)
 
-  // Логируем результаты
+	// Логируем результаты
 	clearScreen()
 	logResults(updatedLaps)
 
@@ -186,7 +185,7 @@ func calculatePositionsAndDelays(laps []Data.Lap, config Config.Settings) {
 	var leaderLap Data.Lap
 
 	for index, lap := range laps {
-		if lap.RaceId == laps[len(laps)-1].RaceId {
+		if lap.RaceId == laps[0].RaceId {
 			if !containsTagId(latestLapsInRace, lap.TagId) {
 				laps[index].LapIsLatest = true
 				latestLapsInRace = append(latestLapsInRace, lap)
@@ -232,12 +231,15 @@ func clearScreen() {
 	fmt.Print("\033[H\033[2J")
 }
 
+
 // Логируем результаты
 func logResults(laps []Data.Lap) {
 	fmt.Printf("Номер заезда: %d, Текущий круг: %d\n", laps[0].RaceId, laps[0].LapNumber)
-	fmt.Printf("%-8s | %-30s | %-20s |\n", "Позиция", "Имя гонщика", "Отставание от лидера")
-	fmt.Println(strings.Repeat("-", 70))
+	fmt.Printf("%-10s | %-20s | %-30s | %-8s | %-10s | %-10s | %-10s\n", 
+		"RacePos", "Behind", "TagId", "LapNum", "LapTime", "RaceTime", "Latest?")
+	fmt.Println(strings.Repeat("-", 120))
 	for _, lap := range laps {
-		fmt.Printf("%-8d | %-30s | %-20d |\n", lap.RacePosition, lap.TagId, lap.TimeBehindTheLeader)
+		fmt.Printf("%-10d | %-20d | %-30s | %-8d | %-10d | %-10d | %-10t \n", 
+			lap.RacePosition, lap.TimeBehindTheLeader, lap.TagId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.LapIsLatest)
 	}
 }
