@@ -1,33 +1,38 @@
 package Timekeeper
 
 import (
-	"log"
-	"chicha/pkg/data"
 	"chicha/pkg/config"
+	"chicha/pkg/data"
+	"log"
+	"fmt"
 )
 
-func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (currentLaps []Data.Lap, err error) {
+// Функция обрабатывает данные гонки в памяти и возвращает обновленные круги и возможную ошибку.
+// currentTimekeeperTask - текущие данные круга, полученные от RFID.
+// previousLaps - данные о предыдущих кругах.
+// config - настройки гонки.
+func calculateRaceInMemory(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (currentLaps []Data.Lap, err error) {
 
 	var currentLap Data.Lap
-
 	var lapIsValid bool
-	//  1. Check if current lap data is within lap timeouts and race timeouts and not very old (some expired data?) and combine with the rest of the race data:
+
+	// Проверка валидности текущих показаний гонщика, чтобы убедиться, что он не устарел и соответствует временным ограничениям заданным в конфиге гонки чтобы решить добавлять их в гонку или нет (защита от подтасовки результатов - например невозможно пройти круг быстрее чем определенное время указанное в конфиге или нельзя накидать результатов улучшающих результат спустя определенное время или с неавторизованного айпи адреса / считывателя).
 	lapIsValid, err = checkLapIsValid(currentTimekeeperTask, previousLaps, config)
 	if err != nil {
-		log.Printf("Data validation error: %s \n", err)
+		log.Printf("Ошибка валидации данных: %s \n", err)
 		return
 	} else {
 		if !lapIsValid {
-			// Data is invalid - drop it and return previousLaps:
-			log.Println("Received invalid lap data. Skipping it.")
+			// Присланные данные мы считаем что невалидны, пропускаем их и возвращаем предыдущие круги.
+			log.Println("Получены невалидные данные круга. Пропускаем.")
 			currentLaps = previousLaps
 			return
 		}
 	}
 
-	// Check do we have any data allready in memory?
+	// Проверка, есть ли уже данные о кругах в памяти.
 	if len(previousLaps) == 0 {
-		// There is no race and lap in the memory - we will create the first race and lap:
+		// Нет данных о гонке и кругах в памяти - создаем первую гонку и круг.
 		currentLap.Id = 1
 		currentLap.TagId = currentTimekeeperTask.TagId
 		currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
@@ -42,16 +47,13 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		currentLap.RaceFinished = false
 		currentLap.RaceTotalTime = 0
 	} else {
-		// Not an empty slice (race allready running)
-
-		// 2. Set well known data receved from rfid (currentLap.TagId, currentLap.DiscoveryMinimalUnixTime, currentLap.DiscoveryAverageUnixTime):
+		// Данные о гонке уже есть в памяти, обновляем текущий круг новыми данными.
 		currentLap.TagId = currentTimekeeperTask.TagId
 		currentLap.DiscoveryMinimalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
 		currentLap.DiscoveryMaximalUnixTime = currentTimekeeperTask.DiscoveryUnixTime
 		currentLap.DiscoveryAverageUnixTime = currentTimekeeperTask.DiscoveryUnixTime
 
-
-		// 3. Calculate currentRaceId:
+		// Рассчитываем номер заезда в котором едет гонщик.
 		previousLapsCopy := previousLaps
 		currentLap.RaceId, err = getCurrentRaceId(currentTimekeeperTask, previousLapsCopy, config)
 		if err != nil {
@@ -59,7 +61,7 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 			return
 		}
 
-		// 4. Calculate race lap number (currentLap.LapNumber):
+		// Рассчитываем номер круга который едет гонщик в данном заезде.
 		currentLap.LapNumber, err = getMyCurrentRaceLapNumber(currentTimekeeperTask, previousLapsCopy, config)
 		if err != nil {
 			log.Println(err)
@@ -67,200 +69,189 @@ func calculateRaceInMemory (currentTimekeeperTask Data.RawData, previousLaps []D
 		}
 	}
 
-
-	// Calculate Lap.Id START:
+	// Рассчитываем ID текущего круга. calculateLapId рассчитывает идентификатор (Id) текущего круга на основе предыдущих кругов (если они есть)
 	currentLap.Id = calculateLapId(currentLap, previousLaps)
-	// END.
 
-	// 5. Calculate DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount  for each laps with same TagId, RaceId, LapNumber. Remove duplicates BEGIN:.
-	// Create slice copy with data from old laps not related to current lap BEGIN:
+	// Объявляем срез для хранения данных о предыдущих кругах, которые не связаны с текущим кругом.
 	var otherOldLaps []Data.Lap
-	// Create slice copy with data from old laps not related to current lap END.
+
+	// Проходим по каждому кругу из списка предыдущих кругов.
 	for _, previousLap := range previousLaps {
-
-
-		// Rewrite my lap data in memory with updated new data (DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount) removing duplicates BEGIN:
+		// Проверяем, совпадают ли идентификаторы текущего и предыдущего кругов:
+		// - TagId (идентификатор метки RFID)
+		// - RaceId (идентификатор гонки)
+		// - LapNumber (номер круга)
 		if currentLap.TagId == previousLap.TagId && currentLap.RaceId == previousLap.RaceId && currentLap.LapNumber == previousLap.LapNumber {
+			// Если идентификаторы совпадают, обновляем данные текущего круга на основе предыдущего круга.
 
-
-			// Calculate DiscoveryMinimalUnixTime BEGIN:
+			// Обновляем минимальное время обнаружения, если у предыдущего круга оно меньше.
 			if currentLap.DiscoveryMinimalUnixTime > previousLap.DiscoveryMinimalUnixTime {
 				currentLap.DiscoveryMinimalUnixTime = previousLap.DiscoveryMinimalUnixTime
-			} 
-			// END.
-
-			// Calculate DiscoveryMaximalUnixTime BEGIN:
-			if currentLap.DiscoveryMaximalUnixTime < previousLap.DiscoveryMaximalUnixTime {
-				currentLap.DiscoveryMaximalUnixTime = previousLap.DiscoveryMinimalUnixTime
 			}
-			// END.
 
-			// Calculate DiscoveryAverageUnixTime BEGIN:
-			currentLap.DiscoveryAverageUnixTime = (currentTimekeeperTask.DiscoveryUnixTime + previousLap.DiscoveryAverageUnixTime)/2
-			// END.
+			// Обновляем максимальное время обнаружения, если у предыдущего круга оно больше.
+			if currentLap.DiscoveryMaximalUnixTime < previousLap.DiscoveryMaximalUnixTime {
+				currentLap.DiscoveryMaximalUnixTime = previousLap.DiscoveryMaximalUnixTime
+			}
 
-			// Calculate AverageResultsCount BEGIN:
-			if previousLap.AverageResultsCount == 0 {
+			// Пересчитываем среднее время обнаружения как среднее арифметическое между текущим и предыдущим значениями.
+			currentLap.DiscoveryAverageUnixTime = (currentTimekeeperTask.DiscoveryUnixTime + previousLap.DiscoveryAverageUnixTime) / 2
+
+			// Если у предыдущего круга количество результатов полученных от транспондера не задано, устанавливаем его в 1.
+			if previousLap.AverageResultsCount < 1 {
 				previousLap.AverageResultsCount = 1
-			} 
+			}
+
+			// Увеличиваем общее среднее количество результатов текущего круга полученных от транспондера на единицу.
 			currentLap.AverageResultsCount = previousLap.AverageResultsCount + 1
-			// END.
-		}
 
-
-		// Rewrite my lap data in memory with updated new data (DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, AverageResultsCount) removing duplicates END.
-		// Recreate data slice with data not related to current lap BEGIN:
-		if currentLap.TagId != previousLap.TagId || currentLap.RaceId != previousLap.RaceId || currentLap.LapNumber != previousLap.LapNumber {
-			// Recreate data slice with old race data not related to current lap :
+		} else {
+			// Если идентификаторы текущего и предыдущего кругов НЕ совпадают,
+			// добавляем предыдущий круг в срез других кругов.
 			otherOldLaps = append(otherOldLaps, previousLap)
 		}
-		// END.
-
 	}
 
-	// Calculate LapTime BEGIN:
+	// Рассчитываем время круга.
 	currentLap.LapTime, err = calculateLapTime(currentLap, otherOldLaps, config)
 	if err != nil {
-		log.Printf("calculateLapTime error: %s \n", err)
+		log.Printf("Ошибка в расчете времени круга: %s \n", err)
 		return
-	} 
-	// END.
+	}
 
-
-	// Calculate my BestLapTime and BestLapNumber BEGIN:
-	if config.VARIABLE_DISTANCE_RACE == false {
+	// Рассчитываем лучшее время круга и номер лучшего круга, если гонка с фиксированной дистанцией.
+	if !config.VARIABLE_DISTANCE_RACE {
 		currentLap.BestLapTime, currentLap.BestLapNumber, err = calculateMyBestLapTime(currentLap, otherOldLaps)
 		if err != nil {
-			log.Printf("calculateMyBestLapTime error: %s \n", err)
+			log.Printf("Ошибка в расчете лучшего времени круга: %s \n", err)
 			return
 		}
 	}
-	// END.
 
-	// Calculate RaceTotalTime BEGIN:
-	// For zero lap RaceTotalTime equals LapTime:
+	// Рассчитываем общее время гонки для текущего круга.
 	if currentLap.LapNumber == 0 {
+		// Если это первый круг (LapNumber == 0), устанавливаем общее время гонки равным времени текущего круга.
 		currentLap.RaceTotalTime = currentLap.LapTime
+
+		// Поскольку это первый круг, то нет предыдущего круга для сравнения, поэтому время на круг быстрее или медленнее предыдущего круга устанавливаем в 0.
 		currentLap.FasterOrSlowerThanPreviousLapTime = 0
+
+		// Первый круг не может быть странным, поэтому устанавливаем флаг LapIsStrange в false.
 		currentLap.LapIsStrange = false
 	} else {
-		// RaceTotalTime equals my previous lap RaceTotalTime + my current LapTime:
+		// Если это не первый круг, проходим по всем другим кругам в памяти (otherOldLaps).
 		for _, otherOldLap := range otherOldLaps {
-			if currentLap.TagId == otherOldLap.TagId && currentLap.RaceId == otherOldLap.RaceId && otherOldLap.LapNumber == currentLap.LapNumber-1 {	
-				// My previous lap is otherOldLap:
+			// Находим предыдущий круг того же участника (TagId) в той же гонке (RaceId) и предыдущим номером круга (LapNumber - 1).
+			if currentLap.TagId == otherOldLap.TagId && currentLap.RaceId == otherOldLap.RaceId && otherOldLap.LapNumber == currentLap.LapNumber-1 {
+				// Общее время гонки равно времени гонки до предыдущего круга плюс время текущего круга.
 				currentLap.RaceTotalTime = otherOldLap.RaceTotalTime + currentLap.LapTime
-				// Calculate if my current lap is faster or slower than previous lap only from 2nd lap result: 
-				if currentLap.LapNumber > 1 && config.VARIABLE_DISTANCE_RACE == false {
+
+				// Если номер текущего круга больше 1 и гонка не имеет переменной дистанции.
+				if currentLap.LapNumber > 1 && !config.VARIABLE_DISTANCE_RACE {
+					// Рассчитываем разницу между временем текущего круга и временем предыдущего круга.
 					currentLap.FasterOrSlowerThanPreviousLapTime = currentLap.LapTime - otherOldLap.LapTime
-					// Проверяем если текущий круг длиннее предыдущего в два раза то ставим маркер "LapIsStrange" (подозрительный круг) - возможно спортсмен упал или его данные не считались RFID считывателем - нужно сверить данные в других источниках (фотофиниш или круговые судьи).
+
+					// Если время текущего круга больше или равно времени предыдущего круга более чем на 100%, считаем текущий круг подозрительным.
 					if (currentLap.LapTime - otherOldLap.LapTime) >= otherOldLap.LapTime {
-						currentLap.LapIsStrange = true 
-					} else  {
+						currentLap.LapIsStrange = true
+					} else {
 						currentLap.LapIsStrange = false
 					}
 				} else {
+					// Для первого и второго кругов в гонке разница во времени и подозрительность круга устанавливаются в 0 и false соответственно.
 					currentLap.FasterOrSlowerThanPreviousLapTime = 0
 					currentLap.LapIsStrange = false
 				}
 			}
 		}
 	}
-	// END.
 
-
-
-	// Remove lap duplicates in memory: otherOldLaps + CurrentLap 
+	// Объединяем старые и обновленные данные кругов.
 	currentLaps = append(otherOldLaps, currentLap)
 
-
-	// 6. Sort laps by discovery unix time ascending (small -> big) depending on config.AVERAGE_RESULTS global setting:
+	// Сортируем круги по времени обнаружения в зависимости от глобальной настройки AVERAGE_RESULTS.
 	if config.AVERAGE_RESULTS {
 		sortLapsAscByDiscoveryAverageUnixTime(currentLaps)
 	} else {
 		sortLapsAscByDiscoveryMinimalUnixTime(currentLaps)
 	}
 
-	// 7. Calculate Race Position and Lap Position BEGIN:
-
-	// Create current race slice only with one latest lap data per rider:
+	// Рассчитываем позицию гонки и круга.
 	var currentRaceLatestLaps []Data.Lap
 
+	// Проходим по всем текущим кругам.
 	for index, currentInMemoryLap := range currentLaps {
-		// Create current race slice:
+		// Проверяем, совпадает ли идентификатор гонки текущего круга с идентификатором гонки обрабатываемого круга.
 		if currentInMemoryLap.RaceId == currentLap.RaceId {
-			// Add only one latest lap data per rider:
+			// Проверяем, содержится ли TagId текущего круга в списке последних кругов текущей гонки.
 			if !containsTagId(currentRaceLatestLaps, currentInMemoryLap.TagId) {
-				// Mark latest lap as latest:
+				// Если нет, помечаем этот круг как последний.
 				currentLaps[index].LapIsLatest = true
-				// Add latest lap to currentRaceLatestLaps slice:  
+				// Добавляем этот круг в список последних кругов текущей гонки.
 				currentRaceLatestLaps = append(currentRaceLatestLaps, currentInMemoryLap)
 			} else {
-				// Mark not latest laps as not latest:
+				// Если да, помечаем этот круг как не последний.
 				currentLaps[index].LapIsLatest = false
 			}
 		}
 	}
 
-	//Сортируе по максимальному LapNumber и минимальному RaceTotalTime:
+	// Сортируем список последних кругов текущей гонки по максимальному номеру круга и минимальному общему времени гонки.
 	currentRaceLatestLaps = sortMaxLapNumberAndMinRaceTotalTime(currentRaceLatestLaps)
 
-	// Slice to store leader of the race current lap:
+	// Объявляем переменную для хранения данных о лидирующем круге текущей гонки.
 	var leaderCurrentLap Data.Lap
 
-	// Calculate position in currentRaceLatestLaps:
+	// Проходим по отсортированным последним кругам текущей гонки.
 	for latestPosition, latestLapData := range currentRaceLatestLaps {
-
-		// Calculate the leader of the race current lap: 
+		// Если это первый круг (лидирующий), сохраняем его данные.
 		if latestPosition == 0 {
 			leaderCurrentLap = latestLapData
 		}
 
-		// Set RacePosition, LapPosition and TimeBehindTheLeader in global currentLaps slice:
+		// Обновляем данные о позиции круга и времени отставания от лидера для всех текущих кругов.
 		for index, lap := range currentLaps {
+			// Проверяем, совпадает ли идентификатор текущего круга с идентификатором последнего круга.
 			if lap.Id == latestLapData.Id {
-
+				// Обновляем данные в зависимости от типа гонки.
 				if config.RACE_TYPE == "mass-start" {
-					currentLaps[index].RacePosition = uint(latestPosition)+1
-					currentLaps[index].LapPosition = uint(latestPosition)+1
+					// Для гонки с массовым стартом устанавливаем позицию в гонке и кругу.
+					currentLaps[index].RacePosition = uint(latestPosition) + 1
+					currentLaps[index].LapPosition = uint(latestPosition) + 1
 				} else if config.RACE_TYPE == "delayed-start" {
+					// Для гонки с раздельным стартом:
 					if lap.LapNumber == 0 {
-						// Zero lap in "delayed-start" race is always zero:
+						// Если это нулевой круг, позиция равна нулю.
 						currentLaps[index].RacePosition = 0
 						currentLaps[index].LapPosition = 0
 					} else {
-						currentLaps[index].RacePosition = uint(latestPosition)+1
-						currentLaps[index].LapPosition = uint(latestPosition)+1
+						// Для всех остальных кругов устанавливаем позицию в гонке и кругу.
+						currentLaps[index].RacePosition = uint(latestPosition) + 1
+						currentLaps[index].LapPosition = uint(latestPosition) + 1
 					}
 				}
-				// Calculate TimeBehindTheLeader:
+				// Рассчитываем время отставания от лидера.
 				currentLaps[index].TimeBehindTheLeader = lap.RaceTotalTime - leaderCurrentLap.RaceTotalTime
 			}
 		}
 	}
-	// End.
 
-
-	// 8. Calculate fastest lap in this race BEGIN:
-	if config.VARIABLE_DISTANCE_RACE == false {
+	// Рассчитываем самый быстрый круг в гонке.
+	if !config.VARIABLE_DISTANCE_RACE {
 		setFastestLaps(currentLaps)
 	}
-	// END.
 
-
-	// X. Echo results before return:
+	// Логируем результаты перед возвратом.
 	i := 0
-	for _, lap := range currentRaceLatestLaps {
+	for _, lap := range currentLaps {
 		if i == 0 {
-			 log.Printf("Race: %d, Lap: %d\n", lap.RaceId, lap.LapNumber)
+			fmt.Printf("Номер заезда: %d, Текущий круг: %d\n", lap.RaceId, lap.LapNumber)
+			fmt.Printf("Позиция | Имя гонщика                | Отставание от лидера |\n")
 		}
-		i++
-
-		//log.Printf("Id=%d, TagId=%s, DiscoveryMinimalUnixTime=%d, DiscoveryMaximalUnixTime=%d, DiscoveryAverageUnixTime=%d, AverageResultsCount=%d, RaceId=%d, LapNumber=%d, LapTime=%d, RaceTotalTime=%d, RacePosition=%d, LapPosition=%d TimeBehindTheLeader=%d, LapIsLatest=%t FasterOrSlowerThanPreviousLapTime=%d LapIsStrange=%t BestLapTime=%d, BestLapNumber=%d, FastestLapInThisRace=%t\n", lap.Id, lap.TagId, lap.DiscoveryMinimalUnixTime, lap.DiscoveryMaximalUnixTime, lap.DiscoveryAverageUnixTime, lap.AverageResultsCount, lap.RaceId, lap.LapNumber, lap.LapTime, lap.RaceTotalTime, lap.RacePosition, lap.LapPosition, lap.TimeBehindTheLeader, lap.LapIsLatest, lap.FasterOrSlowerThanPreviousLapTime, lap.LapIsStrange, lap.BestLapTime, lap.BestLapNumber, lap.FastestLapInThisRace)
-			//if lap.LapIsLatest == true {
-				log.Printf("%d, %s, %d\n", lap.RacePosition,lap.TagId, lap.TimeBehindTheLeader)
-			//}
+		  i++
+			fmt.Printf("  %d    | %s | %d                   |\n", lap.RacePosition, lap.TagId, lap.TimeBehindTheLeader)
 	}
 
-	// 8. Return currentLaps slice or error.
+	// Возвращаем обновленные данные кругов.
 	return
 }
