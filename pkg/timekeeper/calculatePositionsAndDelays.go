@@ -16,18 +16,16 @@ func calculatePositionsAndDelays(laps []Data.Lap, config Config.Settings) {
         // Проверяем, принадлежит ли круг текущей гонке
         if lap.RaceId == laps[0].RaceId {
             currentLap, exists := lapMap[lap.TagId]
-
+            
             if !exists {
                 // Если круг участника еще не записан в карту, добавляем его
                 lapMap[lap.TagId] = lap
             } else if lap.LapNumber > currentLap.LapNumber {
                 // Если номер текущего круга больше, обновляем запись
                 lapMap[lap.TagId] = lap
-            } else if lap.LapNumber == currentLap.LapNumber {
-                if lap.RaceTotalTime < currentLap.RaceTotalTime {
-                    // Если номера кругов равны, но время текущего круга меньше, обновляем запись
-                    lapMap[lap.TagId] = lap
-                }
+            } else if lap.LapNumber == currentLap.LapNumber && lap.RaceTotalTime < currentLap.RaceTotalTime {
+                // Если номера кругов равны, но время текущего круга меньше, обновляем запись
+                lapMap[lap.TagId] = lap
             }
         }
     }
@@ -35,6 +33,7 @@ func calculatePositionsAndDelays(laps []Data.Lap, config Config.Settings) {
     // Маркируем последние круги в общем списке кругов
     for i, lap := range laps {
         latestLap, exists := lapMap[lap.TagId]
+        
         if exists && lap.Id == latestLap.Id {
             laps[i].LapIsLatest = true
             latestLapsInRace = append(latestLapsInRace, lap)
@@ -55,6 +54,7 @@ func calculatePositionsAndDelays(laps []Data.Lap, config Config.Settings) {
 
         for i, lap := range laps {
             if lap.Id == lapData.Id {
+                // Присваиваем позицию в гонке и позицию круга
                 laps[i].RacePosition = uint(position) + 1
                 laps[i].LapPosition = uint(position) + 1
 

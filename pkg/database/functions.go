@@ -229,7 +229,7 @@ func getLatestRaceDataFromDatabase(databaseConnection *sql.DB, config Config.Set
 			log.Printf("Error: SELECT COUNT(*) FROM Laps - %s\n", err) 
 			// отправляем пустой slice в канал так как ничего в бд еще нету:
 			ReplyWithRecentRaceLapsChan <- latestRaceLaps
-			return
+			//return
 		}
 		// No laps found - return empty latestRaceLaps slice:
 		if resultsCount == 0 || err.Error() == "not found" {

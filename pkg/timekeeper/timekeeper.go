@@ -58,7 +58,6 @@ func timekeeperWorkerRun(config Config.Settings) (err error) {
 			CurrentLaps, err = calculateRaceInMemory(currentTimekeeperRawData, CurrentLaps, config)
 			if err != nil {
 				log.Println("Timekeeper fatal error: ", err)
-				return
 			}	else {
 				// показываем результаты в терминале
 				// clear screen:
