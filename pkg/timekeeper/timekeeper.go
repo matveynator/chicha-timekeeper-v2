@@ -2,7 +2,7 @@ package Timekeeper
 
 import (
 	"log"
-
+	"fmt"
 	"chicha/pkg/data"
 	"chicha/pkg/config"
 	"chicha/pkg/database"
@@ -60,9 +60,12 @@ func timekeeperWorkerRun(config Config.Settings) (err error) {
 				log.Println("Timekeeper fatal error: ", err)
 				return
 			}	else {
-				log.Println("laps capacity =", len(CurrentLaps))
+				// показываем результаты в терминале
+				// clear screen:
+				fmt.Print("\033[H\033[2J")
+				// выводим в терминал форматированно:
+				logResults(CurrentLaps)
 			}
-
 		}
 	}
 }

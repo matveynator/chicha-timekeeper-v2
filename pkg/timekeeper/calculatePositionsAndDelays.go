@@ -64,8 +64,12 @@ func calculatePositionsAndDelays(laps []Data.Lap, config Config.Settings) {
                     laps[i].LapPosition = 0
                 }
 
-                // Рассчитываем время отставания от лидера
-                laps[i].TimeBehindTheLeader = lap.RaceTotalTime - leaderLap.RaceTotalTime
+                // Рассчитываем время отставания от лидера только если номера кругов совпадают
+                if lap.LapNumber == leaderLap.LapNumber {
+                    laps[i].TimeBehindTheLeader = leaderLap.RaceTotalTime - lap.RaceTotalTime
+                } else {
+                    laps[i].TimeBehindTheLeader = 0 // или какое-то другое значение, чтобы указать, что отставание не рассчитывается
+                }
             }
         }
     }

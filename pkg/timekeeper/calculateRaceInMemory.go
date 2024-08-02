@@ -39,13 +39,6 @@ func calculateRaceInMemory(currentTimekeeperTask Data.RawData, previousLaps []Da
 	// Рассчитываем позиции и отставания
 	calculatePositionsAndDelays(updatedLaps, config)
 
-	// показываем результаты в терминале
-
-	// clear screen:
-	fmt.Print("\033[H\033[2J")
-	// выводим в терминал форматированно:
-	logResults(updatedLaps)
-
 	return updatedLaps, nil
 }
 
