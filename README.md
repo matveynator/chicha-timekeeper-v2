@@ -1,10 +1,9 @@
-<p align="left">
-    <img property="og:image" src="https://repository-images.githubusercontent.com/577755312/57f67b11-437b-448f-b53e-cf47165612c2" width="25%">
-</p>
+
 
 # Chicha 2 - это хронограф, используемый для соревнований.
 
-<img align="left" property="og:image" src="https://repository-images.githubusercontent.com/368199185/e26c553e-b23e-4bae-b4d2-c2df502e9f04" width="50%"> 
+<img align="left" property="og:image" src="https://repository-images.githubusercontent.com/577755312/d941fbd1-2033-4cf8-83cb-bef0d6038cd4" width="50%"> 
+
 
 Эй, ребята! У нас есть крутой хронограф, который специально разработан для проведения соревнований во всех видах спорта: от бега, плавания, авто и мото спорта до проведения соревнований на море. Он может обслуживать более 100 000 участников одновременно и даже совместим с технологией UHF-RFID. И самое лучшее - мы готовы предложить его вам абсолютно бесплатно!
 
