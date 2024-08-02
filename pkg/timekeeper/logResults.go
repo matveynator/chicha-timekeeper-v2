@@ -8,6 +8,8 @@ import (
 
 // Логируем результаты
 func logResults(laps []Data.Lap) {
+	// Сортируем последние круги по номеру круга и общему времени гонки
+  laps = sortMaxLapNumberAndMinRaceTotalTime(laps)
 	fmt.Printf("Номер заезда: %d, Текущий круг: %d\n", laps[0].RaceId, laps[0].LapNumber)
 	fmt.Printf("%-8s | %-6s | %-30s | %-8s | %-10s | %-10s | %-10s\n", 
 		"RacePos", "Behind", "TagId", "LapNum", "LapTime", "RaceTime", "Latest?")
