@@ -9,7 +9,7 @@ import (
 )
 
 // Check time in data is valid:
-func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Config.Settings) (valid bool, err error) {
+func checkLapIsValid(lapToCheck data.RawData, previousLaps []data.Lap, config Config.Settings) (valid bool, err error) {
 
 	// Get location from config time zone:
 	var location *time.Location
@@ -65,7 +65,7 @@ func checkLapIsValid(lapToCheck Data.RawData, previousLaps []Data.Lap, config Co
 		} else {
 			// If race not expired, calculate lap time (valid if > minimal lap time before previous results) and not more than precision time.
 			// Create slice with only my data in it:
-			var myPreviousLaps []Data.Lap
+			var myPreviousLaps []data.Lap
 			for _, myPreviousLap := range previousLapsCopy {
 				if lapToCheck.TagId == myPreviousLap.TagId {
 					// Add my previous data to slice:	

@@ -6,7 +6,7 @@ import (
 )
 
 // Рассчитываем общее время гонки для текущего круга
-func calculateRaceTotalTime(currentLap *Data.Lap, nonMatchingLaps []Data.Lap, config Config.Settings) {
+func calculateRaceTotalTime(currentLap *data.Lap, nonMatchingLaps []data.Lap, config Config.Settings) {
 	if currentLap.LapNumber == 0 {
 		currentLap.RaceTotalTime = currentLap.LapTime
 		currentLap.FasterOrSlowerThanPreviousLapTime = 0

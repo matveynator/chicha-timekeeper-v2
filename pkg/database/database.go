@@ -14,14 +14,14 @@ import (
 )
 
 // Saving each transporder data to database:
-var DatabaseSaveRawTask chan Data.RawData
+var DatabaseSaveRawTask chan data.RawData
 
 // Saving laps data to database
-var DatabaseSaveLapTask chan Data.Lap
+var DatabaseSaveLapTask chan data.Lap
 
 // Recent race laps channels:
-var RequestRecentRaceLapsChan chan Data.RawData
-var ReplyWithRecentRaceLapsChan chan []Data.Lap
+var RequestRecentRaceLapsChan chan data.RawData
+var ReplyWithRecentRaceLapsChan chan []data.Lap
 
 var respawnLock chan int
 //по умолчанию оставляем только один процесс который будет брать задачи и записывать их в базу данных
@@ -30,14 +30,14 @@ var databaseWorkersMaxCount int = 1
 func Run(config Config.Settings) {
 
 	//initialise channel with 1000000 tasks capacity:
-	DatabaseSaveRawTask = make(chan Data.RawData, 1000000)
+	DatabaseSaveRawTask = make(chan data.RawData, 1000000)
 
 	//initialise channel with 1000000 tasks capacity:
-	DatabaseSaveLapTask = make(chan Data.Lap, 1000000)
+	DatabaseSaveLapTask = make(chan data.Lap, 1000000)
 
 	//Initialise recent race laps non buffered (blocking) channels:
-	RequestRecentRaceLapsChan = make(chan Data.RawData)
-	ReplyWithRecentRaceLapsChan = make(chan []Data.Lap)
+	RequestRecentRaceLapsChan = make(chan data.RawData)
+	ReplyWithRecentRaceLapsChan = make(chan []data.Lap)
 
 	//initialize unblocking channel to guard respawn tasks
 	respawnLock = make(chan int, databaseWorkersMaxCount)

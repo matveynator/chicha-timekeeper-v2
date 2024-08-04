@@ -14,16 +14,15 @@ import (
 	"chicha/pkg/config"
 	"chicha/pkg/data"
 )
-func IsValidXML(data []byte) bool {
-	return xml.Unmarshal(data, new(interface{})) == nil
+func IsValidXML(byteData []byte) bool {
+	return xml.Unmarshal(byteData, new(interface{})) == nil
 }
 
-
-func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, err error){
-	if !IsValidXML(data) {
+func parseCSVLine(byteData []byte, remoteIPAddress string) (rawData data.RawData, err error){
+	if !IsValidXML(byteData) {
 		// CSV data processing
 		var csvField []string
-		csvField, err = csv.NewReader(bytes.NewReader(data)).Read()
+		csvField, err = csv.NewReader(bytes.NewReader(byteData)).Read()
 		if err != nil {
 			log.Println(err)
 			return
@@ -80,11 +79,11 @@ func parseCSVLine(data []byte, remoteIPAddress string) (rawData Data.RawData, er
 	return
 }
 
-func parseXMLPacket(data []byte, remoteIPAddress string, config Config.Settings)(rawData Data.RawData, err error) {
-	if IsValidXML(data) {
+func parseXMLPacket(byteData []byte, remoteIPAddress string, config Config.Settings)(rawData data.RawData, err error) {
+	if IsValidXML(byteData) {
 		// XML data processing
-		var rawXMLData Data.RawXMLData
-		err = xml.Unmarshal(data, &rawXMLData)
+		var rawXMLData data.RawXMLData
+		err = xml.Unmarshal(byteData, &rawXMLData)
 		if err != nil {
 			log.Println("xml.Unmarshal ERROR:", err)
 			return

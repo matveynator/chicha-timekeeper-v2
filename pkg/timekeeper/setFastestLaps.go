@@ -6,7 +6,7 @@ import (
 )
 
 // Функция которая отсортирует слайс и для каждой уникальной группы данных с определенным RaceId выберет все LapNumber больше нуля и выберет среди них минимальное  значение поле LapTime и поставит для этой структуры FastestLapInThisRace true, а всем остальным  из тойже группы одинаковых RaceId поставит FastestLapInThisRace false
-func setFastestLaps(laps []Data.Lap) {
+func setFastestLaps(laps []data.Lap) {
 
 	type UniqueRaceId struct {
 		RaceId 	uint

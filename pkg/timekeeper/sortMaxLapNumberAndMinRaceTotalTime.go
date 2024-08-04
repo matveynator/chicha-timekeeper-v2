@@ -6,7 +6,7 @@ import (
 )
 
 // Сортировка по максимальному LapNumber и минимальному RaceTotalTime:
-func sortMaxLapNumberAndMinRaceTotalTime(laps []Data.Lap) []Data.Lap {
+func sortMaxLapNumberAndMinRaceTotalTime(laps []data.Lap) []data.Lap {
 	sort.Slice(laps, func(i, j int) bool {
 		if laps[i].LapNumber > laps[j].LapNumber {
 			return true

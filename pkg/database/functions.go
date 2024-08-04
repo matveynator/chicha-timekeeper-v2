@@ -171,7 +171,7 @@ func createTables(db *sql.DB, config Config.Settings) (err error) {
 }
 
 // Функция для сохранения данных кругов из памяти в базу данных:
-func SaveLapDataInDB (databaseConnection *sql.DB, lap Data.Lap) (err error) {
+func SaveLapDataInDB (databaseConnection *sql.DB, lap data.Lap) (err error) {
 
 	// Проверяем, есть ли в базе данных запись с таким же Id
 	var count int
@@ -198,7 +198,7 @@ func SaveLapDataInDB (databaseConnection *sql.DB, lap Data.Lap) (err error) {
 }
 
 
-func SaveRawDataInDB (databaseConnection *sql.DB, rawData Data.RawData) (err error) {
+func SaveRawDataInDB (databaseConnection *sql.DB, rawData data.RawData) (err error) {
 	var id int
 	err = databaseConnection.QueryRow("SELECT Id FROM RawData order by Id desc limit 1").Scan(&id)
 	if err != nil {
@@ -217,7 +217,7 @@ func getLatestRaceDataFromDatabase(databaseConnection *sql.DB, config Config.Set
 	for {
 		// Init variables:
 		var err error
-		var latestRaceLaps []Data.Lap
+		var latestRaceLaps []data.Lap
 		var resultsCount int = 0
 
 		// Блокируемся и ждем когда нам пришлют задание в этот канал:
@@ -238,7 +238,7 @@ func getLatestRaceDataFromDatabase(databaseConnection *sql.DB, config Config.Set
 			return
 		} else {
 			// Create an empty latest lap struct:
-			var latestLap Data.Lap
+			var latestLap data.Lap
 			// Get latest lap data from database (order by config.AVERAGE_RESULTS setting):
 			if config.AVERAGE_RESULTS {
 				_ = databaseConnection.QueryRow("SELECT DiscoveryMinimalUnixTime, DiscoveryAverageUnixTime, RaceId FROM Laps order by DiscoveryAverageUnixTime desc limit 1").Scan(&latestLap.DiscoveryMinimalUnixTime, &latestLap.DiscoveryAverageUnixTime, &latestLap.RaceId)
@@ -286,7 +286,7 @@ func getLatestRaceDataFromDatabase(databaseConnection *sql.DB, config Config.Set
 
 				// Проходим по всем строкам результата и сканируем значения в структуру Lap.
 				for rows.Next() {
-					var lap Data.Lap
+					var lap data.Lap
 					rowErr := rows.Scan(&lap.Id, &lap.SportsmanId, &lap.TagId, &lap.DiscoveryMinimalUnixTime, &lap.DiscoveryMaximalUnixTime, &lap.DiscoveryAverageUnixTime, &lap.AverageResultsCount, &lap.RaceId, &lap.RacePosition, &lap.RaceTotalTime, &lap.RaceFinished, &lap.LapNumber, &lap.LapTime, &lap.LapPosition, &lap.TimeBehindTheLeader, &lap.LapIsLatest, &lap.BestLapTime, &lap.BestLapNumber, &lap.FastestLapInThisRace, &lap.FasterOrSlowerThanPreviousLapTime, &lap.LapIsStrange)
 					if rowErr != nil {
 						log.Printf("Error: rows.Scan - %s\n", rowErr)

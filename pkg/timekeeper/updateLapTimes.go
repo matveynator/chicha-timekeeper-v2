@@ -5,7 +5,7 @@ import (
 )
 
 // Обновление времен круга
-func updateLapTimes(currentLap *Data.Lap, previousLap Data.Lap, currentTimekeeperTask Data.RawData) {
+func updateLapTimes(currentLap *data.Lap, previousLap data.Lap, currentTimekeeperTask data.RawData) {
 	if currentLap.DiscoveryMinimalUnixTime > previousLap.DiscoveryMinimalUnixTime {
 		currentLap.DiscoveryMinimalUnixTime = previousLap.DiscoveryMinimalUnixTime
 	}

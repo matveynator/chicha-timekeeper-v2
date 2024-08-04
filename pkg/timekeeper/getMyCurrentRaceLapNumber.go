@@ -37,9 +37,9 @@ import (
 
 
 // getMyCurrentRaceLapNumber returns the current lap number of the current racer based on previous laps and current timekeeper task.
-func getMyCurrentRaceLapNumber(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (lapNumber uint, err error) {
+func getMyCurrentRaceLapNumber(currentTimekeeperTask data.RawData, previousLaps []data.Lap, config Config.Settings) (lapNumber uint, err error) {
 
-	var myPreviousLaps []Data.Lap
+	var myPreviousLaps []data.Lap
 
 	// Get current Race ID:
 	var currentRaceId uint

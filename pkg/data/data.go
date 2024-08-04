@@ -1,4 +1,4 @@
-package Data
+package data
 
 type RawData  struct {
 	TagId                       string `xml:"TagID"`

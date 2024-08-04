@@ -6,10 +6,10 @@ import (
 )
 
 // Функция calculateLapTime вычисляет время круга для текущего круга на основе данных предыдущих кругов и настроек конфигурации.
-func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Config.Settings) (lapTime int64, err error) {
+func calculateLapTime(currentLap data.Lap, otherOldLaps []data.Lap, config Config.Settings) (lapTime int64, err error) {
 
 	// Создаем копию массива предыдущих кругов.
-	allLaps := make([]Data.Lap, len(otherOldLaps))
+	allLaps := make([]data.Lap, len(otherOldLaps))
 	copy(allLaps, otherOldLaps)
 
 	// Добавляем текущий круг к копии массива всех кругов.
@@ -23,7 +23,7 @@ func calculateLapTime(currentLap Data.Lap, otherOldLaps []Data.Lap, config Confi
 	}
 
 	// Находим все круги с тем же номером круга и тем же идентификатором гонки, что и текущий круг.
-	var sameLapNumberLaps []Data.Lap
+	var sameLapNumberLaps []data.Lap
 	for _, lap := range allLaps {
 		if lap.RaceId == currentLap.RaceId && lap.LapNumber == currentLap.LapNumber {
 			sameLapNumberLaps = append(sameLapNumberLaps, lap)

@@ -7,8 +7,8 @@ import (
 )
 
 // Обновление текущего круга на основе предыдущих данных
-func updateCurrentLap(currentLap Data.Lap, previousLaps []Data.Lap, currentTimekeeperTask Data.RawData, config Config.Settings) ([]Data.Lap, error) {
-	var nonMatchingLaps []Data.Lap
+func updateCurrentLap(currentLap data.Lap, previousLaps []data.Lap, currentTimekeeperTask data.RawData, config Config.Settings) ([]data.Lap, error) {
+	var nonMatchingLaps []data.Lap
 	var err error
 
 	for _, previousLap := range previousLaps {

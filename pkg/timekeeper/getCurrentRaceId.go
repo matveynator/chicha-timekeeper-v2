@@ -10,7 +10,7 @@ import (
 
 // getCurrentRaceId returns the race ID of the current lap based on previous laps.
 // If there are no previous laps, the race ID will be set to 1.
-func getCurrentRaceId(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (raceId uint, err error) {
+func getCurrentRaceId(currentTimekeeperTask data.RawData, previousLaps []data.Lap, config Config.Settings) (raceId uint, err error) {
 	if len(previousLaps) == 0 {
 		raceId = 1 // If there are no previous laps, assign race ID 1.
 	} else {

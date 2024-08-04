@@ -6,12 +6,12 @@ import (
 )
 
 // Инициализация текущего круга
-func initializeCurrentLap(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (Data.Lap, error) {
-	var currentLap Data.Lap
+func initializeCurrentLap(currentTimekeeperTask data.RawData, previousLaps []data.Lap, config Config.Settings) (data.Lap, error) {
+	var currentLap data.Lap
 	var err error
 
 	if len(previousLaps) == 0 {
-		currentLap = Data.Lap{
+		currentLap = data.Lap{
 			Id:                        1,
 			TagId:                     currentTimekeeperTask.TagId,
 			DiscoveryMinimalUnixTime:  currentTimekeeperTask.DiscoveryUnixTime,
@@ -27,7 +27,7 @@ func initializeCurrentLap(currentTimekeeperTask Data.RawData, previousLaps []Dat
 			RaceTotalTime:             0,
 		}
 	} else {
-		currentLap = Data.Lap{
+		currentLap = data.Lap{
 			TagId:                     currentTimekeeperTask.TagId,
 			DiscoveryMinimalUnixTime:  currentTimekeeperTask.DiscoveryUnixTime,
 			DiscoveryMaximalUnixTime:  currentTimekeeperTask.DiscoveryUnixTime,

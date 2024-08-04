@@ -12,7 +12,7 @@ import (
 )
 //оставляем только один процесс который будет брать задачи и передавать их далее на другой сервер (чтобы сохранялась последовательность)
 var proxyWorkersMaxCount int = 1
-var ProxyTask chan Data.RawData
+var ProxyTask chan data.RawData
 var respawnLock chan int
 
 func Run(config Config.Settings) {
@@ -21,7 +21,7 @@ func Run(config Config.Settings) {
 
 		log.Println("connecting to 0", config.PROXY_ADDRESS)
 		//initialise channel with tasks:
-		ProxyTask = make(chan Data.RawData)
+		ProxyTask = make(chan data.RawData)
 
 		//initialize unblocking channel to guard respawn tasks
 		respawnLock = make(chan int, proxyWorkersMaxCount)
@@ -38,7 +38,7 @@ func Run(config Config.Settings) {
 	}
 }
 
-func CreateNewProxyTask(taskData Data.RawData) {
+func CreateNewProxyTask(taskData data.RawData) {
 	//log.Println("new proxy task:", taskData.TagId)
 	ProxyTask <- taskData
 }

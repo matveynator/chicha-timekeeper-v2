@@ -7,7 +7,7 @@ import (
 // calculateLapId рассчитывает идентификатор (Id) текущего круга на основе предыдущих кругов (если они есть).
 // currentLap - текущий круг, для которого рассчитывается Id.
 // laps - список предыдущих кругов.
-func calculateLapId(currentLap Data.Lap, laps []Data.Lap) (id int64) {
+func calculateLapId(currentLap data.Lap, laps []data.Lap) (id int64) {
 	// Если нет предыдущих кругов:
 	if len(laps) == 0 {
 		// Это первый круг! Устанавливаем id в 1.

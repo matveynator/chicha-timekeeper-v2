@@ -7,8 +7,8 @@ import (
 )
 
 // Обрабатывает данные гонки в памяти и возвращает обновленные круги и возможную ошибку.
-func calculateRaceInMemory(currentTimekeeperTask Data.RawData, previousLaps []Data.Lap, config Config.Settings) (updatedLaps []Data.Lap, err error) {
-	var currentLap Data.Lap
+func calculateRaceInMemory(currentTimekeeperTask data.RawData, previousLaps []data.Lap, config Config.Settings) (updatedLaps []data.Lap, err error) {
+	var currentLap data.Lap
 	var lapIsValid bool
 
 	// Проверка валидности текущих данных круга.

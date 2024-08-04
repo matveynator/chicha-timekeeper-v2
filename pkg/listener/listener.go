@@ -22,7 +22,7 @@ func init() {
 func processConnection(connection net.Conn, config Config.Settings) {
 	defer connection.Close()
 	var tempDelay time.Duration // how long to sleep on accept failure
-	var rawData Data.RawData
+	var rawData data.RawData
 
 	// Read connection in lap
 	for {

@@ -5,7 +5,7 @@ import (
 )
 
 // Calculate next Id:
-func getNextLapId (laps []Data.Lap) (id int64) {
+func getNextLapId (laps []data.Lap) (id int64) {
 	// Set initial Id:
 	id = 0
 	// Search for highest Id:

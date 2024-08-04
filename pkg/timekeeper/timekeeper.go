@@ -13,13 +13,13 @@ import (
 
 //оставляем только один процесс который будет калькулировать время
 var timekeeperWorkersMaxCount int = 1
-var TimekeeperRawData chan Data.RawData
+var TimekeeperRawData chan data.RawData
 var respawnLock chan int
 
 func Run(config Config.Settings) {
 
 	//initialize channel with tasks:
-	TimekeeperRawData = make(chan Data.RawData)
+	TimekeeperRawData = make(chan data.RawData)
 
 	//initialize unblocking channel to guard respawn tasks
 	respawnLock = make(chan int, timekeeperWorkersMaxCount)
@@ -38,7 +38,7 @@ func Run(config Config.Settings) {
 
 
 func timekeeperWorkerRun(config Config.Settings) (err error) {
-	var CurrentLaps []Data.Lap
+	var CurrentLaps []data.Lap
 
 	for {
 		select {

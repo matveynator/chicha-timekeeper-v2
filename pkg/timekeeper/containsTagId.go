@@ -5,7 +5,7 @@ import (
 )
 
 // Check slice contains TagID:
-func containsTagId(laps []Data.Lap, tagId string) bool {
+func containsTagId(laps []data.Lap, tagId string) bool {
 	for _, lap := range laps {
 		if lap.TagId == tagId {
 			return true

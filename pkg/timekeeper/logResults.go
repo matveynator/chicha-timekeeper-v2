@@ -7,7 +7,7 @@ import (
 )
 
 // Логируем результаты
-func logResults(laps []Data.Lap) {
+func logResults(laps []data.Lap) {
 	if len(laps) == 0 {
 		fmt.Println("Нет данных для отображения.")
 	} else {

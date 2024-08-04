@@ -6,7 +6,7 @@ import (
 )
 
 // Sort slice by race total time descending (big -> small):
-func sortLapsDescByRaceTotalTime (lapsToSort []Data.Lap) {
+func sortLapsDescByRaceTotalTime (lapsToSort []data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
 		return lapsToSort[i].RaceTotalTime > lapsToSort[j].RaceTotalTime
 	})

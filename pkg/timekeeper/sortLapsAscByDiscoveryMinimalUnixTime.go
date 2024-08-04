@@ -6,7 +6,7 @@ import (
 )
 
 // Sort slice by discovery minimal unix time ascending (small -> big):
-func sortLapsAscByDiscoveryMinimalUnixTime (lapsToSort []Data.Lap) {
+func sortLapsAscByDiscoveryMinimalUnixTime (lapsToSort []data.Lap) {
 	sort.Slice(lapsToSort, func(i, j int) bool {
 		return lapsToSort[i].DiscoveryMinimalUnixTime < lapsToSort[j].DiscoveryMinimalUnixTime
 	})
