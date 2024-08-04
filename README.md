@@ -1,5 +1,3 @@
-
-
 # Chicha 2 - это хронограф, используемый для соревнований.
 
 <img align="left" property="og:image" src="https://repository-images.githubusercontent.com/577755312/d941fbd1-2033-4cf8-83cb-bef0d6038cd4" width="50%"> 
@@ -19,7 +17,7 @@
 - Download latest version of [↓ CHICHA 2.](http://files.zabiyaka.net/chicha2/latest/) 
 - For race testing - download [↓ RACETEST.](http://files.zabiyaka.net/racetest/latest/) 
 
-### Хронограф может быть использован в двух режимах: "mass-start" и "delayed-start".
+<img align="right" property="og:image" src="https://github.com/matveynator/chicha-timekeeper-v2/blob/main/chicha-logo-2.png?raw=true" width="25%"> ### Хронограф может быть использован в двух режимах: "mass-start" и "delayed-start".
 > Существует опция конфигурации под названием "-race-type", которая позволяет выбирать тип гонки: "mass-start" (масс-старт) или "delayed-start" (отложенный старт).
 
 Режим "mass-start", - словно сигнал трубы: все участники сразу в бой! А режим "delayed-start" дает возможность стартовать поочередно, с небольшим перерывом между началом гонки. Например, в забеге на 100 метров или в мотокроссе, спортсмены могут стартовать все вместе (mass-start) или же в авторалли последовательно, с некоторым временным интервалом (delayed-start). Исходя из условий проведения соревнований, выбирается соответствующий режим работы хронографа.
