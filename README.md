@@ -1,6 +1,6 @@
 # Chicha 2 - это хронограф, используемый для соревнований.
 
-<img align="left" property="og:image" src="https://repository-images.githubusercontent.com/577755312/d941fbd1-2033-4cf8-83cb-bef0d6038cd4" width="50%"> 
+<img align="left" property="og:image" src="https://repository-images.githubusercontent.com/577755312/af4fe1c6-7582-4715-8bb6-62bc916faaa5" width="50%"> 
 
 
 Эй, ребята! У нас есть крутой хронограф, который специально разработан для проведения соревнований во всех видах спорта: от бега, плавания, авто и мото спорта до проведения соревнований на море. Он может обслуживать более 100 000 участников одновременно и даже совместим с технологией UHF-RFID. И самое лучшее - мы готовы предложить его вам абсолютно бесплатно!
@@ -17,7 +17,7 @@
 - Download latest version of [↓ CHICHA 2.](http://files.zabiyaka.net/chicha2/latest/) 
 - For race testing - download [↓ RACETEST.](http://files.zabiyaka.net/racetest/latest/) 
 
-<img align="right" property="og:image" src="https://github.com/matveynator/chicha-timekeeper-v2/blob/main/chicha-logo-2.png?raw=true" width="25%"> ### Хронограф может быть использован в двух режимах: "mass-start" и "delayed-start".
+<img align="right" property="og:image" src="https://repository-images.githubusercontent.com/577755312/af4fe1c6-7582-4715-8bb6-62bc916faaa5" width="25%"> ### Хронограф может быть использован в двух режимах: "mass-start" и "delayed-start".
 > Существует опция конфигурации под названием "-race-type", которая позволяет выбирать тип гонки: "mass-start" (масс-старт) или "delayed-start" (отложенный старт).
 
 Режим "mass-start", - словно сигнал трубы: все участники сразу в бой! А режим "delayed-start" дает возможность стартовать поочередно, с небольшим перерывом между началом гонки. Например, в забеге на 100 метров или в мотокроссе, спортсмены могут стартовать все вместе (mass-start) или же в авторалли последовательно, с некоторым временным интервалом (delayed-start). Исходя из условий проведения соревнований, выбирается соответствующий режим работы хронографа.
